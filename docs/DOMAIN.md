@@ -291,7 +291,7 @@
 
 ## 四、开放问题：remainingLesson 存还是算？
 
-> **本问题不做决定，等待 Tech Lead Review。**
+> **本问题已由 ADR-004 决策：禁止存储，必须实时计算。**
 
 ### 问题
 
@@ -355,7 +355,7 @@
 
 ---
 
-**状态：待定 — 等待 Tech Lead Review**
+**状态：已决策 — 见 `.agent/adr/004-student-no-remaining-lesson.md`（禁止存储，实时计算）**
 
 ---
 

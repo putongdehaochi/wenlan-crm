@@ -4,10 +4,7 @@
 
 ### Todo
 
-- [ ] 录入学生
-- [ ] 为学生录入课时
-- [ ] 快速签到
-- [ ] 查看剩余课时
+- 查看剩余课时
 
 ### Doing
 
@@ -15,7 +12,9 @@
 
 ### Done
 
-（暂无）
+- 录入学生（Sprint 2 — Student Module）
+- 为学生录入课时（Sprint 3 — Lesson Module）
+- 快速签到（Sprint 4 — Attendance Module）
 
 ---
 
@@ -23,10 +22,9 @@
 
 ### Todo
 
-- [ ] 学生请假登记
-- [ ] 安排补课
-- [ ] 续费提醒
-- [ ] 查看签到记录
+- 学生请假登记
+- 安排补课
+- 续费提醒
 
 ### Doing
 
@@ -34,7 +32,11 @@
 
 ### Done
 
-（暂无）
+- 查看签到记录（Sprint 5 — Attendance History + Undo）
+- Restore Attendance（Sprint 6 — 恢复误撤销签到）
+- History Date Filter（Sprint 6 — 历史日期筛选）
+- Attendance Audit（Sprint 7 — Audit List / Timeline）
+- Attendance Statistics（Sprint 7 — 运营统计 / 学员排行）
 
 ---
 
@@ -42,9 +44,9 @@
 
 ### Todo
 
-- [ ] 多老师协作
-- [ ] 课消月报
-- [ ] 家长课时查询
+- 多老师协作
+- 课消月报
+- 家长课时查询
 
 ### Doing
 

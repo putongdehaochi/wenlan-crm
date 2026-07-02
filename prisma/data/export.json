@@ -1,0 +1,127 @@
+{
+  "exportedAt": "2026-07-02T11:16:41.537Z",
+  "students": [
+    {
+      "id": "cmr3aa9kh0000hwvq1lhmc9g9",
+      "name": "汪汪",
+      "contactName": "汪汪妈",
+      "phone": "13678787878",
+      "note": "汪汪6岁啦",
+      "status": "ACTIVE",
+      "createdAt": "2026-07-02T09:10:06.833Z",
+      "updatedAt": "2026-07-02T09:10:06.833Z"
+    },
+    {
+      "id": "cmr3ab7ft0002hwvq7f3rmkr1",
+      "name": "喵喵",
+      "contactName": "喵喵妈",
+      "phone": "13989890000",
+      "note": "喵喵8岁",
+      "status": "ACTIVE",
+      "createdAt": "2026-07-02T09:10:50.729Z",
+      "updatedAt": "2026-07-02T09:10:50.729Z"
+    },
+    {
+      "id": "cmr3aesf70009hwvqiypzih09",
+      "name": "噜噜",
+      "contactName": "噜噜妈",
+      "phone": "13678789999",
+      "note": "噜噜5岁",
+      "status": "ACTIVE",
+      "createdAt": "2026-07-02T09:13:37.891Z",
+      "updatedAt": "2026-07-02T09:13:37.891Z"
+    }
+  ],
+  "lessonPackages": [
+    {
+      "id": "cmr3aaj4r0001hwvqs4im5i03",
+      "studentId": "cmr3aa9kh0000hwvq1lhmc9g9",
+      "quantity": 16,
+      "note": "汪汪报名",
+      "purchasedAt": "2026-07-02T09:10:19.227Z",
+      "createdAt": "2026-07-02T09:10:19.227Z"
+    },
+    {
+      "id": "cmr3abiqv0003hwvqxl18scef",
+      "studentId": "cmr3ab7ft0002hwvq7f3rmkr1",
+      "quantity": 32,
+      "note": "喵喵报两期",
+      "purchasedAt": "2026-07-02T09:11:05.383Z",
+      "createdAt": "2026-07-02T09:11:05.383Z"
+    },
+    {
+      "id": "cmr3abryx0004hwvqunuyy0p9",
+      "studentId": "cmr3ab7ft0002hwvq7f3rmkr1",
+      "quantity": 1,
+      "note": "【调整】送一节",
+      "purchasedAt": "2026-07-02T09:11:17.337Z",
+      "createdAt": "2026-07-02T09:11:17.337Z"
+    },
+    {
+      "id": "cmr3ac07m0005hwvql25e52bw",
+      "studentId": "cmr3ab7ft0002hwvq7f3rmkr1",
+      "quantity": -1,
+      "note": "【调整】不送了",
+      "purchasedAt": "2026-07-02T09:11:28.018Z",
+      "createdAt": "2026-07-02T09:11:28.018Z"
+    },
+    {
+      "id": "cmr3af2r2000ahwvqfc0il8iu",
+      "studentId": "cmr3aesf70009hwvqiypzih09",
+      "quantity": 17,
+      "note": "噜噜多送一节",
+      "purchasedAt": "2026-07-02T09:13:51.278Z",
+      "createdAt": "2026-07-02T09:13:51.278Z"
+    }
+  ],
+  "attendances": [
+    {
+      "id": "cmr3ac5po0006hwvql9hcdllk",
+      "studentId": "cmr3ab7ft0002hwvq7f3rmkr1",
+      "attendanceDate": "2026-07-02T00:00:00.000Z",
+      "status": "VOIDED",
+      "voidedAt": "2026-07-02T09:11:43.387Z",
+      "createdAt": "2026-07-02T09:11:35.148Z"
+    },
+    {
+      "id": "cmr3ag2zi000bhwvqbvo0135k",
+      "studentId": "cmr3aesf70009hwvqiypzih09",
+      "attendanceDate": "2026-07-02T00:00:00.000Z",
+      "status": "VALID",
+      "voidedAt": null,
+      "createdAt": "2026-07-02T09:14:38.238Z"
+    }
+  ],
+  "lifecycleEvents": [
+    {
+      "id": "cmr3ac5rv0007hwvqm9toon0b",
+      "attendanceId": "cmr3ac5po0006hwvql9hcdllk",
+      "studentId": "cmr3ab7ft0002hwvq7f3rmkr1",
+      "eventType": "CHECK_IN",
+      "occurredAt": "2026-07-02T09:11:35.148Z",
+      "operatorId": null,
+      "metadata": null,
+      "createdAt": "2026-07-02T09:11:35.227Z"
+    },
+    {
+      "id": "cmr3acc3i0008hwvq0ezthbtr",
+      "attendanceId": "cmr3ac5po0006hwvql9hcdllk",
+      "studentId": "cmr3ab7ft0002hwvq7f3rmkr1",
+      "eventType": "VOID",
+      "occurredAt": "2026-07-02T09:11:43.387Z",
+      "operatorId": null,
+      "metadata": null,
+      "createdAt": "2026-07-02T09:11:43.422Z"
+    },
+    {
+      "id": "cmr3ag307000chwvq7nvrxcxc",
+      "attendanceId": "cmr3ag2zi000bhwvqbvo0135k",
+      "studentId": "cmr3aesf70009hwvqiypzih09",
+      "eventType": "CHECK_IN",
+      "occurredAt": "2026-07-02T09:14:38.238Z",
+      "operatorId": null,
+      "metadata": null,
+      "createdAt": "2026-07-02T09:14:38.264Z"
+    }
+  ]
+}

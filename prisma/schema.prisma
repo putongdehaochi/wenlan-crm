@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum StudentStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum AttendanceStatus {
+  VALID
+  VOIDED
+}
+
+enum LifecycleEventType {
+  CHECK_IN
+  VOID
+  RESTORE
+}
+
+model Student {
+  id          String        @id @default(cuid())
+  name        String
+  contactName String        @map("contact_name")
+  phone       String?
+  note        String?
+  status      StudentStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  lessonPackages           LessonPackage[]
+  attendances              Attendance[]
+  attendanceLifecycleEvents AttendanceLifecycleEvent[]
+
+  @@unique([name, contactName])
+  @@map("students")
+}
+
+model LessonPackage {
+  id          String   @id @default(cuid())
+  studentId   String   @map("student_id")
+  quantity    Int
+  note        String?
+  purchasedAt DateTime @default(now()) @map("purchased_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@index([studentId])
+  @@map("lesson_packages")
+}
+
+model Attendance {
+  id             String           @id @default(cuid())
+  studentId      String           @map("student_id")
+  attendanceDate DateTime         @db.Date @map("attendance_date")
+  status         AttendanceStatus @default(VALID)
+  voidedAt       DateTime?        @map("voided_at")
+  createdAt      DateTime         @default(now()) @map("created_at")
+
+  student         Student                    @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  lifecycleEvents AttendanceLifecycleEvent[]
+
+  @@unique([studentId, attendanceDate])
+  @@index([attendanceDate])
+  @@map("attendances")
+}
+
+model AttendanceLifecycleEvent {
+  id           String             @id @default(cuid())
+  attendanceId String             @map("attendance_id")
+  studentId    String             @map("student_id")
+  eventType    LifecycleEventType @map("event_type")
+  occurredAt   DateTime           @map("occurred_at")
+  operatorId   String?            @map("operator_id")
+  metadata     Json?              @db.JsonB
+  createdAt    DateTime           @default(now()) @map("created_at")
+
+  attendance Attendance @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
+  student    Student    @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@index([attendanceId, occurredAt])
+  @@index([studentId, occurredAt])
+  @@index([eventType, occurredAt])
+  @@map("attendance_lifecycle_events")
+}

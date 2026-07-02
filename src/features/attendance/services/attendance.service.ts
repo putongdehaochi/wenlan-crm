@@ -1,0 +1,448 @@
+/**
+ * @file attendance.service.ts
+ * @feature attendance
+ * @purpose 签到模块业务入口；Validator → Repository → Mapper
+ *
+ * Check In 固定流程（Tech Lead M2）：
+ * Validator → findById → existsToday → getBalance → create → Mapper
+ */
+
+import { ATTENDANCE_ERROR_MESSAGES } from "@/features/attendance/errors/attendance.errors"
+import {
+  groupLifecycleEventsByAttendanceId,
+  toAttendanceAuditListRowList,
+  toAttendanceAuditTimeline,
+} from "@/features/attendance/mappers/attendance-audit.mapper"
+import {
+  toAttendanceHistoryRowList,
+  toRestoreAttendanceResult,
+  toVoidAttendanceResult,
+} from "@/features/attendance/mappers/attendance-history.mapper"
+import {
+  toCheckInResult,
+  toTodayRowList,
+} from "@/features/attendance/mappers/attendance.mapper"
+import { attendanceRepository } from "@/features/attendance/repositories/attendance.repository"
+import { attendanceLifecycleRepository } from "@/features/attendance/repositories/attendance-lifecycle.repository"
+import type { AttendanceAuditListRow } from "@/features/attendance/types/attendance-audit-list-row.type"
+import type { AttendanceAuditTimeline } from "@/features/attendance/types/attendance-audit-timeline.type"
+import type { AttendanceHistoryRow } from "@/features/attendance/types/attendance-history-row.type"
+import type { AttendanceTodayRow } from "@/features/attendance/types/attendance-today-row.type"
+import type {
+  CheckInInput,
+  ListTodayAttendanceInput,
+} from "@/features/attendance/types/check-in-input.type"
+import type { CheckInResult } from "@/features/attendance/types/check-in-result.type"
+import type { FindHistoryInput } from "@/features/attendance/types/find-history-input.type"
+import type { FindAuditInput } from "@/features/attendance/types/find-audit-input.type"
+import type { GetAttendanceAuditTimelineInput } from "@/features/attendance/types/get-attendance-audit-timeline-input.type"
+import type { RestoreAttendanceInput } from "@/features/attendance/types/restore-attendance-input.type"
+import type { RestoreAttendanceResult } from "@/features/attendance/types/restore-attendance-result.type"
+import type { VoidAttendanceInput } from "@/features/attendance/types/void-attendance-input.type"
+import type { VoidAttendanceResult } from "@/features/attendance/types/void-attendance-result.type"
+import {
+  validateCheckInInput,
+  validateListTodayAttendanceDate,
+} from "@/features/attendance/validators/check-in.validator"
+import { validateListAttendanceHistoryInput } from "@/features/attendance/validators/list-attendance-history.validator"
+import { validateListAttendanceAuditInput } from "@/features/attendance/validators/list-attendance-audit.validator"
+import { validateGetAttendanceAuditTimelineInput } from "@/features/attendance/validators/get-attendance-audit-timeline.validator"
+import { validateRestoreAttendanceInput } from "@/features/attendance/validators/restore-attendance.validator"
+import { validateVoidAttendanceInput } from "@/features/attendance/validators/void-attendance.validator"
+import { lessonBalanceRepository } from "@/features/lessons/repositories/lesson-balance.repository"
+import { studentRepository } from "@/features/students/repositories/student.repository"
+import type { AttendanceActionResult } from "@/shared/types/action-result.type"
+
+export async function listTodayAttendance(
+  input: ListTodayAttendanceInput = {}
+): Promise<AttendanceActionResult<AttendanceTodayRow[]>> {
+  const dateValidation = validateListTodayAttendanceDate(input.attendanceDate)
+  if (!dateValidation.success) {
+    return {
+      success: false,
+      errorType: "VALIDATION_ERROR",
+      fieldErrors: dateValidation.fieldErrors,
+    }
+  }
+
+  try {
+    const attendanceDate = dateValidation.data
+    const entities = await studentRepository.findAllActive()
+    const ids = entities.map((entity) => entity.id)
+
+    const detailsMap = await attendanceRepository.getTodayDetailsMap(
+      ids,
+      attendanceDate
+    )
+    const balanceMap = await lessonBalanceRepository.getBalances(ids)
+
+    return {
+      success: true,
+      data: toTodayRowList(entities, balanceMap, detailsMap),
+    }
+  } catch {
+    return {
+      success: false,
+      errorType: "INTERNAL_ERROR",
+      message: ATTENDANCE_ERROR_MESSAGES.INTERNAL_ERROR,
+    }
+  }
+}
+
+export async function checkInStudent(
+  input: CheckInInput
+): Promise<AttendanceActionResult<CheckInResult>> {
+  const validation = validateCheckInInput(input)
+  if (!validation.success) {
+    return {
+      success: false,
+      errorType: "VALIDATION_ERROR",
+      fieldErrors: validation.fieldErrors,
+    }
+  }
+
+  try {
+    const { studentId, attendanceDate } = validation.data
+
+    const student = await studentRepository.findById(studentId)
+    if (!student) {
+      return {
+        success: false,
+        errorType: "STUDENT_NOT_FOUND",
+        message: ATTENDANCE_ERROR_MESSAGES.STUDENT_NOT_FOUND,
+      }
+    }
+
+    if (student.status === "ARCHIVED") {
+      return {
+        success: false,
+        errorType: "STUDENT_ARCHIVED",
+        message: ATTENDANCE_ERROR_MESSAGES.STUDENT_ARCHIVED,
+      }
+    }
+
+    const alreadyCheckedIn = await attendanceRepository.existsToday(
+      studentId,
+      attendanceDate
+    )
+    if (alreadyCheckedIn) {
+      return {
+        success: false,
+        errorType: "ALREADY_CHECKED_IN",
+        message: ATTENDANCE_ERROR_MESSAGES.ALREADY_CHECKED_IN,
+      }
+    }
+
+    const todayRecord = await attendanceRepository.findTodayByStudent(
+      studentId,
+      attendanceDate
+    )
+    if (todayRecord?.status === "VOIDED") {
+      return {
+        success: false,
+        errorType: "VOIDED_TODAY",
+        message: ATTENDANCE_ERROR_MESSAGES.VOIDED_TODAY_RESTORE_REQUIRED,
+      }
+    }
+
+    const lessonBalance = await lessonBalanceRepository.getBalance(studentId)
+    if (lessonBalance < 1) {
+      return {
+        success: false,
+        errorType: "INSUFFICIENT_BALANCE",
+        message: ATTENDANCE_ERROR_MESSAGES.INSUFFICIENT_BALANCE,
+      }
+    }
+
+    const entity = await attendanceRepository.create({
+      studentId,
+      attendanceDate,
+    })
+
+    const balanceAfter = await lessonBalanceRepository.getBalance(studentId)
+
+    return {
+      success: true,
+      data: toCheckInResult(entity, balanceAfter),
+    }
+  } catch {
+    return {
+      success: false,
+      errorType: "INTERNAL_ERROR",
+      message: ATTENDANCE_ERROR_MESSAGES.INTERNAL_ERROR,
+    }
+  }
+}
+
+export async function listAttendanceHistory(
+  input: FindHistoryInput = {}
+): Promise<AttendanceActionResult<AttendanceHistoryRow[]>> {
+  const validation = validateListAttendanceHistoryInput(input)
+  if (!validation.success) {
+    return {
+      success: false,
+      errorType: "VALIDATION_ERROR",
+      fieldErrors: validation.fieldErrors,
+    }
+  }
+
+  try {
+    const { studentId, limit, dateFrom, dateTo } = validation.data
+
+    if (studentId) {
+      const student = await studentRepository.findById(studentId)
+      if (!student) {
+        return {
+          success: false,
+          errorType: "STUDENT_NOT_FOUND",
+          message: ATTENDANCE_ERROR_MESSAGES.STUDENT_NOT_FOUND,
+        }
+      }
+    }
+
+    const entities = await attendanceRepository.findHistory({
+      studentId,
+      limit,
+      dateFrom,
+      dateTo,
+    })
+    const uniqueStudentIds = [...new Set(entities.map((entity) => entity.studentId))]
+    const students = await studentRepository.findByIds(uniqueStudentIds)
+    const studentMap = new Map(students.map((student) => [student.id, student]))
+
+    return {
+      success: true,
+      data: toAttendanceHistoryRowList(entities, studentMap),
+    }
+  } catch {
+    return {
+      success: false,
+      errorType: "INTERNAL_ERROR",
+      message: ATTENDANCE_ERROR_MESSAGES.INTERNAL_ERROR,
+    }
+  }
+}
+
+export async function voidAttendance(
+  input: VoidAttendanceInput
+): Promise<AttendanceActionResult<VoidAttendanceResult>> {
+  const validation = validateVoidAttendanceInput(input)
+  if (!validation.success) {
+    return {
+      success: false,
+      errorType: "VALIDATION_ERROR",
+      fieldErrors: validation.fieldErrors,
+    }
+  }
+
+  try {
+    const { attendanceId } = validation.data
+
+    const existing = await attendanceRepository.findById(attendanceId)
+    if (!existing) {
+      return {
+        success: false,
+        errorType: "ATTENDANCE_NOT_FOUND",
+        message: ATTENDANCE_ERROR_MESSAGES.ATTENDANCE_NOT_FOUND,
+      }
+    }
+
+    if (existing.status === "VOIDED") {
+      return {
+        success: false,
+        errorType: "ALREADY_VOIDED",
+        message: ATTENDANCE_ERROR_MESSAGES.ALREADY_VOIDED,
+      }
+    }
+
+    const entity = await attendanceRepository.void(attendanceId)
+    const lessonBalance = await lessonBalanceRepository.getBalance(entity.studentId)
+
+    return {
+      success: true,
+      data: toVoidAttendanceResult(entity, lessonBalance),
+    }
+  } catch {
+    return {
+      success: false,
+      errorType: "INTERNAL_ERROR",
+      message: ATTENDANCE_ERROR_MESSAGES.INTERNAL_ERROR,
+    }
+  }
+}
+
+export async function restoreAttendance(
+  input: RestoreAttendanceInput
+): Promise<AttendanceActionResult<RestoreAttendanceResult>> {
+  const validation = validateRestoreAttendanceInput(input)
+  if (!validation.success) {
+    return {
+      success: false,
+      errorType: "VALIDATION_ERROR",
+      fieldErrors: validation.fieldErrors,
+    }
+  }
+
+  try {
+    const { attendanceId } = validation.data
+
+    const existing = await attendanceRepository.findById(attendanceId)
+    if (!existing) {
+      return {
+        success: false,
+        errorType: "ATTENDANCE_NOT_FOUND",
+        message: ATTENDANCE_ERROR_MESSAGES.ATTENDANCE_NOT_FOUND,
+      }
+    }
+
+    if (existing.status === "VALID") {
+      return {
+        success: false,
+        errorType: "ALREADY_VALID",
+        message: ATTENDANCE_ERROR_MESSAGES.ALREADY_VALID,
+      }
+    }
+
+    const currentBalance = await lessonBalanceRepository.getBalance(
+      existing.studentId
+    )
+    if (currentBalance < 1) {
+      return {
+        success: false,
+        errorType: "INSUFFICIENT_BALANCE",
+        message: ATTENDANCE_ERROR_MESSAGES.INSUFFICIENT_BALANCE,
+      }
+    }
+
+    const entity = await attendanceRepository.restore(attendanceId)
+    const lessonBalance = await lessonBalanceRepository.getBalance(entity.studentId)
+
+    return {
+      success: true,
+      data: toRestoreAttendanceResult(entity, lessonBalance),
+    }
+  } catch {
+    return {
+      success: false,
+      errorType: "INTERNAL_ERROR",
+      message: ATTENDANCE_ERROR_MESSAGES.INTERNAL_ERROR,
+    }
+  }
+}
+
+export async function listAttendanceAudit(
+  input: FindAuditInput = {}
+): Promise<AttendanceActionResult<AttendanceAuditListRow[]>> {
+  const validation = validateListAttendanceAuditInput(input)
+  if (!validation.success) {
+    return {
+      success: false,
+      errorType: "VALIDATION_ERROR",
+      fieldErrors: validation.fieldErrors,
+    }
+  }
+
+  try {
+    const { studentId, limit, dateFrom, dateTo, status } = validation.data
+
+    if (studentId) {
+      const student = await studentRepository.findById(studentId)
+      if (!student) {
+        return {
+          success: false,
+          errorType: "STUDENT_NOT_FOUND",
+          message: ATTENDANCE_ERROR_MESSAGES.STUDENT_NOT_FOUND,
+        }
+      }
+    }
+
+    const entities = await attendanceRepository.findAuditList({
+      studentId,
+      limit,
+      dateFrom,
+      dateTo,
+      status,
+    })
+
+    const attendanceIds = entities.map((entity) => entity.id)
+    const lifecycleEvents =
+      await attendanceLifecycleRepository.findByAttendanceIds(attendanceIds)
+    const eventsByAttendanceId =
+      groupLifecycleEventsByAttendanceId(lifecycleEvents)
+
+    const uniqueStudentIds = [...new Set(entities.map((entity) => entity.studentId))]
+    const students = await studentRepository.findByIds(uniqueStudentIds)
+    const studentMap = new Map(students.map((student) => [student.id, student]))
+
+    return {
+      success: true,
+      data: toAttendanceAuditListRowList(
+        entities,
+        studentMap,
+        eventsByAttendanceId
+      ),
+    }
+  } catch {
+    return {
+      success: false,
+      errorType: "INTERNAL_ERROR",
+      message: ATTENDANCE_ERROR_MESSAGES.INTERNAL_ERROR,
+    }
+  }
+}
+
+export async function getAttendanceAuditTimeline(
+  input: GetAttendanceAuditTimelineInput
+): Promise<AttendanceActionResult<AttendanceAuditTimeline>> {
+  const validation = validateGetAttendanceAuditTimelineInput(input)
+  if (!validation.success) {
+    return {
+      success: false,
+      errorType: "VALIDATION_ERROR",
+      fieldErrors: validation.fieldErrors,
+    }
+  }
+
+  try {
+    const { attendanceId } = validation.data
+
+    const entity = await attendanceRepository.findById(attendanceId)
+    if (!entity) {
+      return {
+        success: false,
+        errorType: "ATTENDANCE_NOT_FOUND",
+        message: ATTENDANCE_ERROR_MESSAGES.ATTENDANCE_NOT_FOUND,
+      }
+    }
+
+    const events =
+      await attendanceLifecycleRepository.findByAttendanceId(attendanceId)
+    const student = await studentRepository.findById(entity.studentId)
+
+    return {
+      success: true,
+      data: toAttendanceAuditTimeline(entity, student ?? undefined, events),
+    }
+  } catch {
+    return {
+      success: false,
+      errorType: "INTERNAL_ERROR",
+      message: ATTENDANCE_ERROR_MESSAGES.INTERNAL_ERROR,
+    }
+  }
+}
+
+export const attendanceService = {
+  listTodayAttendance,
+  checkInStudent,
+  listAttendanceHistory,
+  voidAttendance,
+  restoreAttendance,
+  listAttendanceAudit,
+  getAttendanceAuditTimeline,
+}
+
+export const attendanceAuditService = {
+  listAttendanceAudit,
+  getAttendanceAuditTimeline,
+}

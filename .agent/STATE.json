@@ -1,12 +1,112 @@
 {
-  "version": "0.1.0",
-  "phase": "Phase1",
-  "current_task": "录入学生",
-  "completed": [
-    "Domain Modeling",
-    "Business Flow Design",
-    "Sprint Planning",
-    "Project Initialization"
-  ],
-  "last_update": "2026-06-29"
+  "version": "0.9.0",
+  "phase": "Phase2",
+  "current_task": null,
+  "current_sprint": null,
+  "priority": "Phase2 first",
+  "deferred": ["Agent Prompt Framework"],
+  "sprint_5": {
+    "status": "closed",
+    "closed_at": "2026-07-01"
+  },
+  "sprint_6": {
+    "status": "closed",
+    "closed_at": "2026-07-01",
+    "feature": "Attendance Restore + History Date Filter",
+    "spec": "specs/attendance-restore.md",
+    "spec_revision": "Rev 2",
+    "plan": "specs/attendance-restore.plan.md",
+    "plan_revision": "Rev 2",
+    "adr": ["012"],
+    "tech_lead_review": {
+      "design_rev2_result": "APPROVED",
+      "design_final_approval_date": "2026-07-01",
+      "m4_result": "APPROVED",
+      "final_review_date": "2026-07-01"
+    },
+    "implementation": {
+      "m1": "approved",
+      "m2": "approved",
+      "m3": "approved",
+      "m4": "approved"
+    }
+  },
+  "sprint_7": {
+    "status": "closed",
+    "closed_at": "2026-07-02",
+    "feature": "Attendance Audit + Statistics",
+    "spec": "specs/attendance-audit.md",
+    "spec_revision": "Rev 2",
+    "plan": "specs/attendance-audit.plan.md",
+    "plan_revision": "Rev 2",
+    "adr": ["013"],
+    "design_review": ".agent/SPRINT7_DESIGN_REVIEW.md",
+    "progress_m1": ".agent/SPRINT7_PROGRESS_M1.md",
+    "progress_m2": ".agent/SPRINT7_PROGRESS_M2.md",
+    "progress_m3": ".agent/SPRINT7_PROGRESS_M3.md",
+    "progress_m4": ".agent/SPRINT7_PROGRESS_M4.md",
+    "review_evidence": ".agent/SPRINT7_REVIEW_EVIDENCE.md",
+    "tech_lead_review": {
+      "design_rev1_result": "CHANGES_REQUIRED",
+      "design_rev1_date": "2026-07-01",
+      "required_changes": ["RC1", "RC2", "RC3", "RC4", "RC5"],
+      "design_rev2_result": "APPROVED",
+      "design_final_approval_date": "2026-07-01",
+      "m1_result": "APPROVED",
+      "m1_review_date": "2026-07-01",
+      "m2_result": "APPROVED",
+      "m2_review_date": "2026-07-01",
+      "m3_result": "APPROVED",
+      "m3_review_date": "2026-07-01",
+      "m4_result": "APPROVED",
+      "final_review_date": "2026-07-02"
+    },
+    "coding": "closed",
+    "implementation": {
+      "m1": "approved",
+      "m2": "approved",
+      "m3": "approved",
+      "m4": "approved"
+    }
+  },
+  "sprint_8": {
+    "status": "closed",
+    "closed_at": "2026-07-02",
+    "feature": "Attendance Export + Trend + Remaining Lesson Rank",
+    "spec": "specs/attendance-export-trend.md",
+    "spec_revision": "Rev 2",
+    "plan": "specs/attendance-export-trend.plan.md",
+    "plan_revision": "Rev 2",
+    "adr": ["014"],
+    "design_review": ".agent/SPRINT8_DESIGN_REVIEW.md",
+    "progress_m1": ".agent/SPRINT8_PROGRESS_M1.md",
+    "progress_m2": ".agent/SPRINT8_PROGRESS_M2.md",
+    "progress_m3": ".agent/SPRINT8_PROGRESS_M3.md",
+    "progress_m4": ".agent/SPRINT8_PROGRESS_M4.md",
+    "review_evidence": ".agent/SPRINT8_REVIEW_EVIDENCE.md",
+    "frozen_core": "Frozen Analytics Core (v1)",
+    "tech_lead_review": {
+      "design_rev1_result": "CHANGES_REQUIRED",
+      "design_rev1_date": "2026-07-02",
+      "required_changes": ["RC1", "RC2", "RC3", "RC4", "RC5", "RC6"],
+      "design_rev2_result": "APPROVED",
+      "design_final_approval_date": "2026-07-02",
+      "m1_result": "APPROVED",
+      "m1_review_date": "2026-07-02",
+      "m2_result": "APPROVED",
+      "m2_review_date": "2026-07-02",
+      "m3_result": "APPROVED",
+      "m3_review_date": "2026-07-02",
+      "m4_result": "APPROVED",
+      "final_review_date": "2026-07-02"
+    },
+    "coding": "closed",
+    "implementation": {
+      "m1": "approved",
+      "m2": "approved",
+      "m3": "approved",
+      "m4": "approved"
+    }
+  },
+  "last_update": "2026-07-02"
 }

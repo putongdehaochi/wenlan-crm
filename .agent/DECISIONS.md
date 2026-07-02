@@ -1,74 +1,36 @@
-# 架构决策记录
+# 架构决策记录（索引）
 
-> 所有重要架构决策追加于此，不得覆盖历史记录。
-
----
-
-## ADR-001：技术栈选型（2026-06-29）
-
-**决策**
-
-Sprint 1 起采用以下技术栈：
-
-| 层级 | 选型 |
-|------|------|
-| 框架 | Next.js 15（App Router） |
-| 语言 | TypeScript |
-| UI | React + TailwindCSS + shadcn/ui |
-| ORM | Prisma |
-| 数据库 | PostgreSQL |
-| 架构 | Feature First |
-
-**原因**
-
-- Next.js App Router 支持前后端同仓，适合书法工作室 MVP 快速迭代
-- Prisma + PostgreSQL 提供类型安全的数据访问与生产级持久化
-- Feature First 按业务功能垂直切分，避免 Sprint 2–4 模块耦合
-- shadcn/ui 提供可定制的基础组件，减少 UI 搭建时间
-
-**影响**
-
-- 应用主目录：`frontend/`（Next.js 全栈单体）
-- 原 `backend/` 目录暂不使用，后续可移除或作脚本用途
-- 数据库迁移通过 Prisma 管理，位于 `frontend/prisma/`
+> 各 ADR 以独立文件存放于 `.agent/adr/`，**不得删除历史文件**。
+>
+> 新增决策：创建下一编号 ADR 文件，并更新本索引。
 
 ---
 
-## ADR-002：Feature First 目录约定（2026-06-29）
+## ADR 清单
 
-**决策**
 
-```
-src/
-├── app/          # 路由薄层
-├── features/     # 业务功能（students、lessons、attendance…）
-└── shared/       # 跨功能共享（ui、lib、hooks、types）
-```
+| 编号  | 文件                                                                                 | 标题                                       | 状态                   | 日期         |
+| --- | ---------------------------------------------------------------------------------- | ---------------------------------------- | -------------------- | ---------- |
+| 001 | [adr/001-tech-stack.md](./adr/001-tech-stack.md)                                   | 技术栈选型                                    | 已采纳                  | 2026-06-29 |
+| 002 | [adr/002-feature-first.md](./adr/002-feature-first.md)                             | Feature First 目录约定                       | 已采纳                  | 2026-06-29 |
+| 003 | [adr/003-prisma-init.md](./adr/003-prisma-init.md)                                 | Prisma 初始化策略                             | 已采纳                  | 2026-06-29 |
+| 004 | [adr/004-student-no-remaining-lesson.md](./adr/004-student-no-remaining-lesson.md) | Student 禁止存储 remainingLesson             | 已采纳                  | 2026-06-29 |
+| 005 | [adr/005-student-household-evolution.md](./adr/005-student-household-evolution.md) | Student 未来演进为 Household                  | 已采纳（方向性）             | 2026-06-29 |
+| 006 | [adr/006-student-schema.md](./adr/006-student-schema.md)                           | Student Schema                           | 已采纳                  | 2026-06-29 |
+| 007 | [adr/007-lesson-balance.md](./adr/007-lesson-balance.md)                           | 课时余额计算规则（lessonBalance）                  | 已采纳                  | 2026-06-29 |
+| 008 | [adr/008-lesson-package-schema.md](./adr/008-lesson-package-schema.md)             | LessonPackage Schema                     | 已采纳                  | 2026-06-29 |
+| 009 | [adr/009-attendance.md](./adr/009-attendance.md)                                   | Attendance Schema 与签到扣课规则                | 已采纳                  | 2026-06-29 |
+| 010 | [adr/010-attendance-prisma-schema.md](./adr/010-attendance-prisma-schema.md)       | Attendance Prisma Schema（M1）             | 已采纳                  | 2026-06-29 |
+| 011 | [adr/011-attendance-history.md](./adr/011-attendance-history.md)                   | Attendance History、Undo、Evolution（Rev 3） | 已采纳（Sprint 5 CLOSED） | 2026-07-01 |
+| 012 | [adr/012-attendance-restore.md](./adr/012-attendance-restore.md)                   | Attendance Restore、History Filter 演进     | 已采纳（Sprint 6 CLOSED） | 2026-07-01 |
+| 013 | [adr/013-attendance-audit.md](./adr/013-attendance-audit.md)                       | Audit Timeline、Statistics 架构             | 已采纳（Sprint 7 CLOSED） | 2026-07-02 |
+| 014 | [adr/014-attendance-export-trend.md](./adr/014-attendance-export-trend.md)         | Export CSV、Monthly Trend、Remaining Rank  | 已采纳（Sprint 8 CLOSED） | 2026-07-02 |
 
-shadcn/ui 组件统一放 `src/shared/components/ui/`。
-
-**原因**
-
-- 与 `docs/IMPLEMENTATION-SPRINT1-STUDENTS.md` 按领域拆模块的思路一致
-- `features/` 内聚功能代码，`shared/` 避免循环依赖
-- `app/` 只做路由组合，业务逻辑不进 page 文件
 
 ---
 
-## ADR-003：Prisma 初始化策略（2026-06-29）
+## 如何追加新 ADR
 
-**决策**
-
-- 数据库：PostgreSQL
-- Schema 位置：`frontend/prisma/schema.prisma`
-- Client 输出：`src/generated/prisma`
-- Sprint 1 初始化阶段**不定义任何业务表**
-
-**原因**
-
-- 项目初始化与业务建模分离，等 Tech Lead Review 后再建 `students` 表
-- 避免与 `DOMAIN.md` remainingLesson 开放问题提前耦合
-
-**后续**
-
-- 学生管理 Sprint 将追加 `Student` model 及首次 migration
+1. 在 `.agent/adr/` 创建 `{编号}-{slug}.md`
+2. 在本表追加一行
+3. 在 `CHANGELOG.md` 记录原因
