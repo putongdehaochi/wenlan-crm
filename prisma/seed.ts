@@ -7,7 +7,7 @@
 import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 
-import { PrismaClient } from "../src/generated/prisma/client"
+import { Prisma, PrismaClient } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import pg from "pg"
 
@@ -65,6 +65,15 @@ function createPrisma(): PrismaClient {
     idleTimeoutMillis: 1_000,
   })
   return new PrismaClient({ adapter: new PrismaPg(pool) })
+}
+
+function toJsonMetadata(
+  value: unknown
+): Prisma.InputJsonValue | undefined {
+  if (value === null || value === undefined) {
+    return undefined
+  }
+  return value as Prisma.InputJsonValue
 }
 
 function toDate(value: string | Date): Date {
@@ -142,7 +151,7 @@ async function importExport(
         eventType: row.eventType,
         occurredAt: toDate(row.occurredAt),
         operatorId: row.operatorId,
-        metadata: row.metadata as object | null,
+        metadata: toJsonMetadata(row.metadata),
         createdAt: toDate(row.createdAt),
       })),
       skipDuplicates: true,
