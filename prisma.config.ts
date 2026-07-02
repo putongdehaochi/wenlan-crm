@@ -3,16 +3,22 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+import { resolveMigrationDatabaseUrl } from "./scripts/lib/database-url";
+
+const databaseUrl = resolveMigrationDatabaseUrl();
+
+if (!databaseUrl) {
+  console.warn(
+    "[prisma.config] 未检测到数据库 URL（DATABASE_URL / POSTGRES_URL 等）。迁移命令将失败。"
+  );
+}
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
   },
   datasource: {
-    // migrate / CLI 优先用直连；线上 Neon 的 pooled 地址不能跑迁移
-    url:
-      process.env["DIRECT_URL"] ??
-      process.env["DATABASE_URL_UNPOOLED"] ??
-      process.env["DATABASE_URL"],
+    url: databaseUrl ?? "postgresql://build-placeholder@127.0.0.1:5432/build",
   },
 });

@@ -89,13 +89,20 @@ https://wenlan-crm-xxxx.vercel.app
 
 ## 常见问题
 
-### 构建失败：数据库连不上
+### 构建失败：The datasource.url property is required
 
-- 检查 `DATABASE_URL` 是否为 **pooler** 地址
-- 在 Vercel → Settings → Environment Variables 补一条：
-  ```
-  DIRECT_URL = <Neon 控制台里的 direct / unpooled 连接串>
-  ```
+说明 Vercel **还没连上数据库**。请：
+
+1. Vercel 项目 → **Storage** → **Create Database** → **Neon Postgres**
+2. 创建后确认 Environment Variables 里出现 `DATABASE_URL` 或 `POSTGRES_URL`
+3. 重新 **Redeploy**
+
+若已连接仍失败，在 Settings → Environment Variables 手动添加：
+
+- `DATABASE_URL` = Neon 控制台 **Pooled** 连接串
+- `DIRECT_URL` = Neon 控制台 **Direct** 连接串
+
+并勾选 **Production** 与 **Preview**。
 
 ### 页面能开但没有数据
 
