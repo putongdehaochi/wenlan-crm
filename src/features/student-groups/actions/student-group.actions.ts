@@ -13,6 +13,7 @@ export async function listSavedStudentGroupsAction(): Promise<
 export async function createSavedStudentGroupAction(input: {
   name: string
   studentIds: string[]
+  teacherId?: string | null
 }): Promise<StudentGroupActionResult<StudentGroupSummary>> {
   return studentGroupService.createSavedStudentGroup(input)
 }
@@ -21,6 +22,7 @@ export async function updateSavedStudentGroupAction(input: {
   id: string
   name?: string
   studentIds?: string[]
+  teacherId?: string | null
 }): Promise<StudentGroupActionResult<StudentGroupSummary>> {
   return studentGroupService.updateSavedStudentGroup(input)
 }

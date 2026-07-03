@@ -10,9 +10,11 @@ import {
   mergeFieldErrors,
   type ValidationResult,
 } from "@/features/attendance/validators/validation-result.type"
+import { validateStudentId } from "@/features/students/validators/rules/student-id.rule"
 
 export type ValidatedRestoreAttendanceInput = {
   attendanceId: string
+  teacherId?: string
 }
 
 function validateAttendanceId(value: unknown): string | null {
@@ -39,10 +41,28 @@ export function validateRestoreAttendanceInput(
     return { success: false, fieldErrors }
   }
 
+  let teacherId: string | undefined
+  if (input.teacherId !== undefined && input.teacherId !== "") {
+    const teacherIdError = validateStudentId(
+      input.teacherId,
+      ATTENDANCE_ERROR_MESSAGES.STUDENT_ID_REQUIRED
+    )
+    if (teacherIdError) {
+      fieldErrors.teacherId = teacherIdError
+    } else {
+      teacherId = (input.teacherId as string).trim()
+    }
+  }
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return { success: false, fieldErrors }
+  }
+
   return {
     success: true,
     data: {
       attendanceId: (input.attendanceId as string).trim(),
+      teacherId,
     },
   }
 }

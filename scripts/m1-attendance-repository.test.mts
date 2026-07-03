@@ -18,6 +18,27 @@ import { prisma } from "../src/shared/lib/db"
 const TEST_PREFIX = "__m1_attendance__"
 const TODAY = toAttendanceDate()
 
+async function getDefaultTeacherId(): Promise<string> {
+  const teacher = await prisma.teacher.findFirst({
+    where: { isDefault: true },
+    orderBy: { createdAt: "asc" },
+  })
+
+  if (teacher) {
+    return teacher.id
+  }
+
+  const created = await prisma.teacher.create({
+    data: {
+      id: "default-teacher",
+      name: "默认老师",
+      isDefault: true,
+    },
+  })
+
+  return created.id
+}
+
 function assert(condition: boolean, message: string): void {
   if (!condition) throw new Error(`Assertion failed: ${message}`)
 }
@@ -48,6 +69,7 @@ async function cleanup(): Promise<void> {
 async function runTests(): Promise<void> {
   console.log("M1 Attendance Repository — self test\n")
   await cleanup()
+  const defaultTeacherId = await getDefaultTeacherId()
 
   const student = await studentRepository.create({
     name: `${TEST_PREFIX}小明`,
@@ -82,6 +104,7 @@ async function runTests(): Promise<void> {
   const created = await attendanceRepository.create({
     studentId: student.id,
     attendanceDate: TODAY,
+    teacherId: defaultTeacherId,
   })
   assertAttendanceEntityShape(created)
   assert(created.status === "VALID", "create defaults VALID")
@@ -118,6 +141,7 @@ async function runTests(): Promise<void> {
   await attendanceRepository.create({
     studentId: studentB.id,
     attendanceDate: TODAY,
+    teacherId: defaultTeacherId,
   })
 
   const batch = await lessonBalanceRepository.getBalances([
@@ -152,6 +176,7 @@ async function runTests(): Promise<void> {
         studentId: student.id,
         attendanceDate: TODAY,
         status: "VALID",
+        teacherId: defaultTeacherId,
       },
     })
   } catch {

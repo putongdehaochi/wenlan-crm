@@ -16,6 +16,9 @@ export type ActionErrorType =
   | "ALREADY_VOIDED"
   | "ALREADY_VALID"
   | "GROUP_NOT_FOUND"
+  | "TEACHER_NOT_FOUND"
+  | "CANNOT_DELETE_DEFAULT_TEACHER"
+  | "TEACHER_IN_USE"
   | "INTERNAL_ERROR"
 
 export type ActionResult<T> =

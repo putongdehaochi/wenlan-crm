@@ -16,6 +16,8 @@ import type {
   SessionStudentGroup,
   StudentGroupSummary,
 } from "@/features/student-groups/types/student-group-summary.type"
+import { TeacherSelect } from "@/features/teachers/components/teacher-select"
+import type { TeacherSummary } from "@/features/teachers/types/teacher-summary.type"
 import { Button } from "@/shared/components/ui/button"
 import { Input } from "@/shared/components/ui/input"
 import { Label } from "@/shared/components/ui/label"
@@ -29,6 +31,9 @@ type AttendanceGroupToolbarProps = {
   savedGroups: StudentGroupSummary[]
   totalActiveStudents: number
   selection: GroupSelection
+  teachers: TeacherSummary[]
+  selectedTeacherId: string
+  onTeacherChange: (teacherId: string) => void
   searchQuery: string
   onSearchQueryChange: (query: string) => void
   onSelectionChange: (selection: GroupSelection) => void
@@ -47,6 +52,9 @@ export function AttendanceGroupToolbar({
   savedGroups,
   totalActiveStudents,
   selection,
+  teachers,
+  selectedTeacherId,
+  onTeacherChange,
   searchQuery,
   onSearchQueryChange,
   onSelectionChange,
@@ -129,14 +137,23 @@ export function AttendanceGroupToolbar({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="attendance-group-search">搜索学员</Label>
-        <Input
-          id="attendance-group-search"
-          value={searchQuery}
-          onChange={(event) => onSearchQueryChange(event.target.value)}
-          placeholder="搜索姓名、联系人或电话…"
+      <div className="grid gap-4 md:grid-cols-[minmax(220px,1fr)_minmax(220px,1fr)]">
+        <TeacherSelect
+          id="attendance-group-teacher"
+          teachers={teachers}
+          value={selectedTeacherId}
+          onChange={onTeacherChange}
+          hint="可覆盖分组默认老师；未选分组默认时使用系统默认老师"
         />
+        <div className="space-y-2">
+          <Label htmlFor="attendance-group-search">搜索学员</Label>
+          <Input
+            id="attendance-group-search"
+            value={searchQuery}
+            onChange={(event) => onSearchQueryChange(event.target.value)}
+            placeholder="搜索姓名、联系人或电话…"
+          />
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-4">

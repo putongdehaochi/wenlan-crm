@@ -42,6 +42,7 @@ export function AttendanceAuditList({
         <TableRow>
           <TableHead>签到日期</TableHead>
           <TableHead>学员姓名</TableHead>
+          <TableHead>授课老师</TableHead>
           <TableHead>当前状态</TableHead>
           <TableHead>最近事件</TableHead>
           <TableHead>最近事件时间</TableHead>

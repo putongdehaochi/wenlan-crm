@@ -15,6 +15,7 @@ export function toStudentGroupSummary(
     name: entity.name,
     type: "SAVED",
     studentIds,
+    teacherId: entity.teacherId,
     memberCount: studentIds.length,
     createdAt: entity.createdAt.toISOString(),
   }

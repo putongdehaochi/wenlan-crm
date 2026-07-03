@@ -16,6 +16,8 @@ export type TodayAttendanceDetail = {
   status: AttendanceStatus
   checkedInAt: Date
   voidedAt: Date | null
+  teacherId: string
+  teacherName: string
 }
 
 export type AttendanceTodayRow = {
@@ -28,4 +30,5 @@ export type AttendanceTodayRow = {
   attendanceId?: string
   checkedInAt?: string | null
   voidedAt?: string | null
+  teacherName?: string | null
 }

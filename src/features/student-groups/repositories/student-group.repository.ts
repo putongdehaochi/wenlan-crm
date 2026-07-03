@@ -16,6 +16,7 @@ function toStudentGroupEntity(row: StudentGroup): StudentGroupEntity {
     id: row.id,
     name: row.name,
     type: "SAVED",
+    teacherId: row.teacherId,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   }
@@ -79,6 +80,7 @@ export async function create(
       data: {
         name: input.name,
         type: "SAVED",
+        teacherId: input.teacherId ?? null,
       },
     })
 
@@ -104,6 +106,9 @@ export async function update(
       where: { id },
       data: {
         ...(input.name !== undefined ? { name: input.name } : {}),
+        ...(input.teacherId !== undefined
+          ? { teacherId: input.teacherId }
+          : {}),
       },
     })
 

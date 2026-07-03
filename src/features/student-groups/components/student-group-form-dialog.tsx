@@ -14,6 +14,8 @@ import {
 import { StudentGroupMemberPicker } from "@/features/student-groups/components/student-group-member-picker"
 import type { StudentGroupSummary } from "@/features/student-groups/types/student-group-summary.type"
 import type { StudentSummary } from "@/features/students/types/student-summary.type"
+import { TeacherSelect } from "@/features/teachers/components/teacher-select"
+import type { TeacherSummary } from "@/features/teachers/types/teacher-summary.type"
 import { Button } from "@/shared/components/ui/button"
 import {
   Dialog,
@@ -30,8 +32,10 @@ type StudentGroupFormDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   students: StudentSummary[]
+  teachers: TeacherSummary[]
   editingGroup?: StudentGroupSummary | null
   initialStudentIds?: string[]
+  initialTeacherId?: string | null
   onSuccess: (group: StudentGroupSummary) => void
 }
 
@@ -39,12 +43,15 @@ export function StudentGroupFormDialog({
   open,
   onOpenChange,
   students,
+  teachers,
   editingGroup,
   initialStudentIds,
+  initialTeacherId,
   onSuccess,
 }: StudentGroupFormDialogProps) {
   const [name, setName] = useState("")
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [teacherId, setTeacherId] = useState("")
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
 
@@ -57,22 +64,27 @@ export function StudentGroupFormDialog({
     setSelectedIds(
       editingGroup?.studentIds ?? initialStudentIds ?? []
     )
+    setTeacherId(editingGroup?.teacherId ?? initialTeacherId ?? "")
     setFieldErrors({})
-  }, [open, editingGroup, initialStudentIds])
+  }, [open, editingGroup, initialStudentIds, initialTeacherId])
 
   async function handleSubmit() {
     setSubmitting(true)
     setFieldErrors({})
+
+    const resolvedTeacherId = teacherId.trim() ? teacherId.trim() : null
 
     const result = editingGroup
       ? await updateSavedStudentGroupAction({
           id: editingGroup.id,
           name,
           studentIds: selectedIds,
+          teacherId: resolvedTeacherId,
         })
       : await createSavedStudentGroupAction({
           name,
           studentIds: selectedIds,
+          teacherId: resolvedTeacherId,
         })
 
     setSubmitting(false)
@@ -114,6 +126,16 @@ export function StudentGroupFormDialog({
               <p className="text-sm text-destructive">{fieldErrors.name}</p>
             )}
           </div>
+
+          <TeacherSelect
+            id="group-default-teacher"
+            label="默认授课老师（可选）"
+            teachers={teachers}
+            value={teacherId}
+            onChange={setTeacherId}
+            includeSystemDefaultOption
+            hint="签到时作为建议值，可在今日签到页覆盖"
+          />
 
           <StudentGroupMemberPicker
             students={students}

@@ -6,4 +6,6 @@
 
 export type RestoreAttendanceInput = {
   attendanceId: string
+  /** 恢复时可重新指定授课老师；未传则保留原记录上的 teacherId */
+  teacherId?: string
 }

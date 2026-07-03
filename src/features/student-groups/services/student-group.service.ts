@@ -83,6 +83,7 @@ export async function getSavedStudentGroup(
 export async function createSavedStudentGroup(input: {
   name: string
   studentIds: string[]
+  teacherId?: string | null
 }): Promise<StudentGroupActionResult<StudentGroupSummary>> {
   const validation = validateCreateStudentGroupInput(input)
   if (!validation.success) {
@@ -112,6 +113,7 @@ export async function updateSavedStudentGroup(input: {
   id: string
   name?: string
   studentIds?: string[]
+  teacherId?: string | null
 }): Promise<StudentGroupActionResult<StudentGroupSummary>> {
   const validation = validateUpdateStudentGroupInput(input)
   if (!validation.success) {
@@ -135,6 +137,7 @@ export async function updateSavedStudentGroup(input: {
     const entity = await studentGroupRepository.update(validation.data.id, {
       name: validation.data.name,
       studentIds: validation.data.studentIds,
+      teacherId: validation.data.teacherId,
     })
 
     const studentIds =

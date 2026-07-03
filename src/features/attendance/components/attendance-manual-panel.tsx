@@ -9,6 +9,8 @@ import { useMemo, useState } from "react"
 
 import type { AttendanceTodayRow } from "@/features/attendance/types/attendance-today-row.type"
 import type { StudentSummary } from "@/features/students/types/student-summary.type"
+import { TeacherSelect } from "@/features/teachers/components/teacher-select"
+import type { TeacherSummary } from "@/features/teachers/types/teacher-summary.type"
 import {
   StudentSearchSelect,
 } from "@/shared/components/student-search-select"
@@ -17,6 +19,9 @@ import { Button } from "@/shared/components/ui/button"
 type AttendanceManualPanelProps = {
   students: StudentSummary[]
   rows: AttendanceTodayRow[]
+  teachers: TeacherSummary[]
+  selectedTeacherId: string
+  onTeacherChange: (teacherId: string) => void
   checkingInId: string | null
   onCheckIn: (studentId: string) => void
 }
@@ -24,6 +29,9 @@ type AttendanceManualPanelProps = {
 export function AttendanceManualPanel({
   students,
   rows,
+  teachers,
+  selectedTeacherId,
+  onTeacherChange,
   checkingInId,
   onCheckIn,
 }: AttendanceManualPanelProps) {
@@ -38,6 +46,14 @@ export function AttendanceManualPanel({
 
   return (
     <div className="space-y-4 rounded-xl border border-border/80 bg-card p-4 shadow-sm">
+      <TeacherSelect
+        id="attendance-manual-teacher"
+        teachers={teachers}
+        value={selectedTeacherId}
+        onChange={onTeacherChange}
+        hint="单人签到需指定授课老师，默认使用系统默认老师"
+      />
+
       <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
         <StudentSearchSelect
           label="搜索学员"

@@ -27,17 +27,23 @@ import {
   filterTodayRowsBySearch,
   isSessionShowAll,
 } from "@/features/attendance/lib/attendance-today-search"
+import { resolveSuggestedTeacherId } from "@/features/attendance/lib/resolve-teacher-id"
 import {
   createDefaultSessionStudentGroup,
   loadSessionStudentGroup,
   resetSessionStudentGroup,
   setSessionStudentIds,
+  setSessionTeacherId,
 } from "@/features/student-groups/lib/session-group.storage"
 import type {
   SessionStudentGroup,
   StudentGroupSummary,
 } from "@/features/student-groups/types/student-group-summary.type"
 import type { StudentSummary } from "@/features/students/types/student-summary.type"
+import {
+  getDefaultTeacherId,
+} from "@/features/teachers/components/teacher-select"
+import type { TeacherSummary } from "@/features/teachers/types/teacher-summary.type"
 import { PageShell } from "@/shared/components/page-shell"
 import { Button } from "@/shared/components/ui/button"
 import {
@@ -56,6 +62,11 @@ type AttendancePageProps = {
   initialLoadError?: string
   savedGroups: StudentGroupSummary[]
   students: StudentSummary[]
+  teachers: TeacherSummary[]
+}
+
+function getSelectionGroupTeacherId(selection: GroupSelection): string | null {
+  return selection.group.teacherId
 }
 
 function formatTodayLabel(): string {
@@ -91,7 +102,12 @@ export function AttendancePage({
   initialLoadError,
   savedGroups: initialSavedGroups,
   students,
+  teachers,
 }: AttendancePageProps) {
+  const defaultTeacherId = useMemo(
+    () => getDefaultTeacherId(teachers),
+    [teachers]
+  )
   const [mode, setMode] = useState<AttendanceMode>("group")
   const [savedGroups, setSavedGroups] =
     useState<StudentGroupSummary[]>(initialSavedGroups)
@@ -113,6 +129,13 @@ export function AttendancePage({
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const [draftMemberIds, setDraftMemberIds] = useState<string[]>([])
   const [groupSearchQuery, setGroupSearchQuery] = useState("")
+  const [selectedTeacherId, setSelectedTeacherId] = useState(defaultTeacherId)
+
+  useEffect(() => {
+    if (defaultTeacherId) {
+      setSelectedTeacherId((current) => current || defaultTeacherId)
+    }
+  }, [defaultTeacherId])
 
   const displayedRows = useMemo(() => {
     if (mode !== "group") {
@@ -156,6 +179,18 @@ export function AttendancePage({
     if (!sessionReady) {
       return
     }
+    setSelectedTeacherId(
+      resolveSuggestedTeacherId({
+        groupTeacherId: getSelectionGroupTeacherId(selection),
+        defaultTeacherId,
+      })
+    )
+  }, [selection, defaultTeacherId, sessionReady])
+
+  useEffect(() => {
+    if (!sessionReady) {
+      return
+    }
     void refreshList(mode, selection)
   }, [mode, selection, refreshList, sessionReady])
 
@@ -167,6 +202,16 @@ export function AttendancePage({
     })
   }
 
+  function handleTeacherChange(teacherId: string) {
+    setSelectedTeacherId(teacherId)
+
+    if (selection.kind === "session") {
+      const next = setSessionTeacherId(teacherId)
+      setSessionGroup(next)
+      setSelection({ kind: "session", group: next })
+    }
+  }
+
   async function handleCheckIn(studentId: string) {
     const studentName = rows.find((row) => row.id === studentId)?.name
     setCheckingInId(studentId)
@@ -174,6 +219,7 @@ export function AttendancePage({
 
     const result = await checkInStudentAction({
       studentId,
+      teacherId: selectedTeacherId,
       groupId:
         mode === "group" && selection.kind === "saved"
           ? selection.group.id
@@ -232,6 +278,7 @@ export function AttendancePage({
     setBatchPending(true)
     const result = await batchCheckInStudentsAction({
       studentIds: targetIds,
+      teacherId: selectedTeacherId,
       groupId:
         selection.kind === "saved" ? selection.group.id : undefined,
     })
@@ -344,6 +391,9 @@ export function AttendancePage({
           savedGroups={savedGroups}
           totalActiveStudents={students.length}
           selection={selection}
+          teachers={teachers}
+          selectedTeacherId={selectedTeacherId}
+          onTeacherChange={handleTeacherChange}
           searchQuery={groupSearchQuery}
           onSearchQueryChange={setGroupSearchQuery}
           onSelectionChange={(nextSelection) => {
@@ -367,6 +417,9 @@ export function AttendancePage({
         <AttendanceManualPanel
           students={students}
           rows={rows}
+          teachers={teachers}
+          selectedTeacherId={selectedTeacherId}
+          onTeacherChange={handleTeacherChange}
           checkingInId={checkingInId}
           onCheckIn={handleCheckIn}
         />
@@ -425,10 +478,14 @@ export function AttendancePage({
         open={saveDialogOpen}
         onOpenChange={setSaveDialogOpen}
         students={students}
+        teachers={teachers}
         initialStudentIds={
           selection.kind === "session" && isSessionShowAll(selection.group.studentIds)
             ? students.map((student) => student.id)
             : selection.group.studentIds
+        }
+        initialTeacherId={
+          selection.kind === "session" ? selection.group.teacherId : null
         }
         onSuccess={handleSavedGroupSuccess}
       />

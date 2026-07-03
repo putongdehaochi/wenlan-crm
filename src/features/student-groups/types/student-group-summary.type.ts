@@ -8,6 +8,7 @@ export type StudentGroupSummary = {
   name: string
   type: "SAVED"
   studentIds: string[]
+  teacherId: string | null
   memberCount: number
   createdAt: string
 }
@@ -18,6 +19,7 @@ export type SessionStudentGroup = {
   name: string
   type: "SESSION"
   studentIds: string[]
+  teacherId: string | null
   createdAt: string
 }
 

@@ -22,5 +22,6 @@ export const ATTENDANCE_ERROR_MESSAGES = {
   AUDIT_STATUS_INVALID: "无效的签到状态",
   AUDIT_FILTER_RESERVED: "该筛选条件尚未开放",
   STATISTICS_FILTER_RESERVED: "该筛选条件尚未开放",
+  TEACHER_NOT_FOUND: "找不到该老师",
   INTERNAL_ERROR: "操作失败，请稍后重试",
 } as const

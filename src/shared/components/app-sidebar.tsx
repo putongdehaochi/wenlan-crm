@@ -11,6 +11,7 @@ import {
   Loader2,
   PieChart,
   ShieldCheck,
+  UserRound,
   Users,
   UsersRound,
 } from "lucide-react"
@@ -49,6 +50,12 @@ const STUDENTS_NAV: NavItem[] = [
     label: "学员分组",
     icon: UsersRound,
     match: (pathname) => pathname.startsWith("/students/groups"),
+  },
+  {
+    href: "/students/teachers",
+    label: "老师管理",
+    icon: UserRound,
+    match: (pathname) => pathname.startsWith("/students/teachers"),
   },
 ]
 

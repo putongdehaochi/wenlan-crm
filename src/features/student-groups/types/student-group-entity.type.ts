@@ -9,6 +9,7 @@ export type StudentGroupEntity = {
   id: string
   name: string
   type: StudentGroupType
+  teacherId: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -16,9 +17,11 @@ export type StudentGroupEntity = {
 export type CreateStudentGroupEntityInput = {
   name: string
   studentIds: string[]
+  teacherId?: string | null
 }
 
 export type UpdateStudentGroupEntityInput = {
   name?: string
   studentIds?: string[]
+  teacherId?: string | null
 }

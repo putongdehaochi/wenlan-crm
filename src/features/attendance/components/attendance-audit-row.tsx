@@ -47,6 +47,7 @@ export function AttendanceAuditRow({ row, onRowClick }: AttendanceAuditRowProps)
     >
       <TableCell>{row.attendanceDate}</TableCell>
       <TableCell className="font-medium">{row.studentName}</TableCell>
+      <TableCell>{row.teacherName ?? "—"}</TableCell>
       <TableCell>{formatStatus(row.status)}</TableCell>
       <TableCell>{formatLastEventType(row.lastEventType)}</TableCell>
       <TableCell>{formatDateTime(row.lastEventAt)}</TableCell>

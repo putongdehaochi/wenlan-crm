@@ -19,6 +19,7 @@ import { validateStudentId } from "@/features/students/validators/rules/student-
 export type ValidatedCheckInInput = {
   studentId: string
   attendanceDate: Date
+  teacherId?: string
   groupId?: string
 }
 
@@ -67,6 +68,8 @@ export function validateCheckInInput(
   }
 
   let groupId: string | undefined
+  let teacherId: string | undefined
+
   if (input.groupId !== undefined && input.groupId !== "") {
     const groupIdError = validateStudentId(
       input.groupId,
@@ -76,6 +79,18 @@ export function validateCheckInInput(
       fieldErrors.groupId = groupIdError
     } else {
       groupId = (input.groupId as string).trim()
+    }
+  }
+
+  if (input.teacherId !== undefined && input.teacherId !== "") {
+    const teacherIdError = validateStudentId(
+      input.teacherId,
+      ATTENDANCE_ERROR_MESSAGES.STUDENT_ID_REQUIRED
+    )
+    if (teacherIdError) {
+      fieldErrors.teacherId = teacherIdError
+    } else {
+      teacherId = (input.teacherId as string).trim()
     }
   }
 
@@ -89,6 +104,7 @@ export function validateCheckInInput(
       studentId: (input.studentId as string).trim(),
       attendanceDate: attendanceDate!,
       groupId,
+      teacherId,
     },
   }
 }

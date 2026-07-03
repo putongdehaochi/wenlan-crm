@@ -20,9 +20,21 @@ function resolveGroupMembers(
     .filter((student): student is StudentSummary => student !== undefined)
 }
 
+export function formatGroupTeacherLabel(
+  group: StudentGroupSummary,
+  teachers: TeacherSummary[]
+): string {
+  if (!group.teacherId) {
+    return "系统默认"
+  }
+
+  return teachers.find((teacher) => teacher.id === group.teacherId)?.name ?? "—"
+}
+
 export function filterStudentGroups(
   groups: StudentGroupSummary[],
   students: StudentSummary[],
+  teachers: TeacherSummary[],
   query: string
 ): StudentGroupSummary[] {
   const normalized = query.trim()
@@ -35,6 +47,11 @@ export function filterStudentGroups(
   return groups.filter((group) => {
     const nameHaystack = group.name.toLowerCase()
     if (tokens.every((token) => nameHaystack.includes(token))) {
+      return true
+    }
+
+    const teacherName = formatGroupTeacherLabel(group, teachers).toLowerCase()
+    if (tokens.every((token) => teacherName.includes(token))) {
       return true
     }
 

@@ -7,6 +7,8 @@
 export type CheckInInput = {
   studentId: string
   attendanceDate?: Date | string
+  /** 用户手动选择的老师（最高优先级） */
+  teacherId?: string
   /** 可选；仅 SAVED 分组 ID，用于记录签到上下文，不影响统计 */
   groupId?: string
 }
@@ -22,5 +24,6 @@ export type ListTodayAttendanceInput = {
 export type BatchCheckInInput = {
   studentIds: string[]
   attendanceDate?: Date | string
+  teacherId?: string
   groupId?: string
 }

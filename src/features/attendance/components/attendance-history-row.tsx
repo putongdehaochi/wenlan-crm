@@ -33,6 +33,7 @@ export function AttendanceHistoryRow({
         {formatDateTime(row.checkedInAt)}
       </TableCell>
       <TableCell className="font-medium">{row.studentName}</TableCell>
+      <TableCell>{row.teacherName ?? "—"}</TableCell>
       <TableCell>
         <div className="flex flex-col gap-0.5">
           <span>{formatStatus(row.status)}</span>

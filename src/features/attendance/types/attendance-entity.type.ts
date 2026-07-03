@@ -10,6 +10,8 @@ export type AttendanceStatus = "VALID" | "VOIDED"
 export type AttendanceEntity = {
   id: string
   studentId: string
+  groupId: string | null
+  teacherId: string
   attendanceDate: Date
   status: AttendanceStatus
   voidedAt: Date | null
@@ -20,6 +22,7 @@ export type AttendanceEntity = {
 export type CreateAttendanceEntityInput = {
   studentId: string
   attendanceDate: Date
+  teacherId?: string
   status?: AttendanceStatus
   groupId?: string
 }

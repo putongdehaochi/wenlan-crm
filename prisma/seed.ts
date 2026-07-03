@@ -90,6 +90,27 @@ async function loadExport(): Promise<ExportPayload | null> {
   }
 }
 
+async function ensureDefaultTeacher(prisma: PrismaClient): Promise<string> {
+  const existing = await prisma.teacher.findFirst({
+    where: { isDefault: true },
+    orderBy: { createdAt: "asc" },
+  })
+
+  if (existing) {
+    return existing.id
+  }
+
+  const created = await prisma.teacher.create({
+    data: {
+      id: "default-teacher",
+      name: "默认老师",
+      isDefault: true,
+    },
+  })
+
+  return created.id
+}
+
 async function importExport(
   prisma: PrismaClient,
   payload: ExportPayload
@@ -99,6 +120,7 @@ async function importExport(
   }
 
   console.log("▶ 导入本地导出数据…")
+  const defaultTeacherId = await ensureDefaultTeacher(prisma)
 
   await prisma.student.createMany({
     data: payload.students.map((row) => ({
@@ -133,6 +155,7 @@ async function importExport(
       data: payload.attendances.map((row) => ({
         id: row.id,
         studentId: row.studentId,
+        teacherId: defaultTeacherId,
         attendanceDate: toDate(row.attendanceDate),
         status: row.status,
         voidedAt: row.voidedAt ? toDate(row.voidedAt) : null,
@@ -206,6 +229,7 @@ async function seedMockData(prisma: PrismaClient): Promise<void> {
   }
 
   console.log(`▶ 补充 ${mockStudents.length} 名演示学员…`)
+  const defaultTeacherId = await ensureDefaultTeacher(prisma)
 
   for (const mock of mockStudents) {
     const student = await prisma.student.create({
@@ -232,6 +256,7 @@ async function seedMockData(prisma: PrismaClient): Promise<void> {
       const attendance = await prisma.attendance.create({
         data: {
           studentId: student.id,
+          teacherId: defaultTeacherId,
           attendanceDate,
         },
       })
@@ -242,6 +267,7 @@ async function seedMockData(prisma: PrismaClient): Promise<void> {
           studentId: student.id,
           eventType: "CHECK_IN",
           occurredAt: attendance.createdAt,
+          operatorId: defaultTeacherId,
         },
       })
     }

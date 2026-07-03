@@ -52,10 +52,60 @@ import { validateGetAttendanceAuditTimelineInput } from "@/features/attendance/v
 import { validateRestoreAttendanceInput } from "@/features/attendance/validators/restore-attendance.validator"
 import { validateVoidAttendanceInput } from "@/features/attendance/validators/void-attendance.validator"
 import { lessonBalanceRepository } from "@/features/lessons/repositories/lesson-balance.repository"
+import { resolveTeacherId } from "@/features/attendance/lib/resolve-teacher-id"
 import { studentGroupRepository } from "@/features/student-groups/repositories/student-group.repository"
+import { STUDENT_GROUP_ERROR_MESSAGES } from "@/features/student-groups/errors/student-group.errors"
+import { teacherRepository } from "@/features/teachers/repositories/teacher.repository"
+import { toTeacherNameMap } from "@/features/teachers/mappers/teacher.mapper"
 import { studentRepository } from "@/features/students/repositories/student.repository"
 import type { StudentEntity } from "@/features/students/types/student-entity.type"
 import type { AttendanceActionResult } from "@/shared/types/action-result.type"
+
+async function resolveCheckInTeacherId(input: {
+  manualTeacherId?: string
+  groupId?: string
+}): Promise<
+  | { success: true; teacherId: string }
+  | { success: false; result: AttendanceActionResult<never> }
+> {
+  const defaultTeacher = await teacherRepository.findDefault()
+  let groupTeacherId: string | null = null
+
+  if (input.groupId) {
+    const group = await studentGroupRepository.findById(input.groupId)
+    if (!group) {
+      return {
+        success: false,
+        result: {
+          success: false,
+          errorType: "GROUP_NOT_FOUND",
+          message: STUDENT_GROUP_ERROR_MESSAGES.GROUP_NOT_FOUND,
+        },
+      }
+    }
+    groupTeacherId = group.teacherId
+  }
+
+  const teacherId = resolveTeacherId({
+    manualTeacherId: input.manualTeacherId,
+    groupTeacherId,
+    defaultTeacherId: defaultTeacher.id,
+  })
+
+  const teacher = await teacherRepository.findById(teacherId)
+  if (!teacher) {
+    return {
+      success: false,
+      result: {
+        success: false,
+        errorType: "TEACHER_NOT_FOUND",
+        message: ATTENDANCE_ERROR_MESSAGES.TEACHER_NOT_FOUND,
+      },
+    }
+  }
+
+  return { success: true, teacherId }
+}
 
 export async function listTodayAttendance(
   input: ListTodayAttendanceInput = {}
@@ -117,7 +167,16 @@ export async function checkInStudent(
   }
 
   try {
-    const { studentId, attendanceDate, groupId } = validation.data
+    const { studentId, attendanceDate, groupId, teacherId: manualTeacherId } =
+      validation.data
+
+    const teacherResolution = await resolveCheckInTeacherId({
+      manualTeacherId,
+      groupId,
+    })
+    if (!teacherResolution.success) {
+      return teacherResolution.result
+    }
 
     const student = await studentRepository.findById(studentId)
     if (!student) {
@@ -173,6 +232,7 @@ export async function checkInStudent(
       studentId,
       attendanceDate,
       groupId,
+      teacherId: teacherResolution.teacherId,
     })
 
     const balanceAfter = await lessonBalanceRepository.getBalance(studentId)
@@ -212,6 +272,7 @@ export async function batchCheckInStudents(
       studentId,
       attendanceDate: input.attendanceDate,
       groupId: input.groupId,
+      teacherId: input.teacherId,
     })
 
     if (result.success) {
@@ -269,12 +330,17 @@ export async function listAttendanceHistory(
       dateTo,
     })
     const uniqueStudentIds = [...new Set(entities.map((entity) => entity.studentId))]
-    const students = await studentRepository.findByIds(uniqueStudentIds)
+    const uniqueTeacherIds = [...new Set(entities.map((entity) => entity.teacherId))]
+    const [students, teachers] = await Promise.all([
+      studentRepository.findByIds(uniqueStudentIds),
+      teacherRepository.findByIds(uniqueTeacherIds),
+    ])
     const studentMap = new Map(students.map((student) => [student.id, student]))
+    const teacherNameMap = toTeacherNameMap(teachers)
 
     return {
       success: true,
-      data: toAttendanceHistoryRowList(entities, studentMap),
+      data: toAttendanceHistoryRowList(entities, studentMap, teacherNameMap),
     }
   } catch {
     return {
@@ -433,15 +499,21 @@ export async function listAttendanceAudit(
       groupLifecycleEventsByAttendanceId(lifecycleEvents)
 
     const uniqueStudentIds = [...new Set(entities.map((entity) => entity.studentId))]
-    const students = await studentRepository.findByIds(uniqueStudentIds)
+    const uniqueTeacherIds = [...new Set(entities.map((entity) => entity.teacherId))]
+    const [students, teachers] = await Promise.all([
+      studentRepository.findByIds(uniqueStudentIds),
+      teacherRepository.findByIds(uniqueTeacherIds),
+    ])
     const studentMap = new Map(students.map((student) => [student.id, student]))
+    const teacherNameMap = toTeacherNameMap(teachers)
 
     return {
       success: true,
       data: toAttendanceAuditListRowList(
         entities,
         studentMap,
-        eventsByAttendanceId
+        eventsByAttendanceId,
+        teacherNameMap
       ),
     }
   } catch {

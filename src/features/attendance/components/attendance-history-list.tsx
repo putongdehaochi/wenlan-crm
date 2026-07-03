@@ -45,6 +45,7 @@ export function AttendanceHistoryList({
           <TableHead>签到日期</TableHead>
           <TableHead>签到时间</TableHead>
           <TableHead>学员姓名</TableHead>
+          <TableHead>授课老师</TableHead>
           <TableHead>状态</TableHead>
           <TableHead>操作</TableHead>
         </TableRow>

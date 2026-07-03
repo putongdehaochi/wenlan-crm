@@ -77,7 +77,8 @@ function deriveLastEvent(events: AttendanceLifecycleEventEntity[]): {
 export function toAttendanceAuditListRow(
   entity: AttendanceEntity,
   student: StudentEntity | undefined,
-  events: AttendanceLifecycleEventEntity[]
+  events: AttendanceLifecycleEventEntity[],
+  teacherName?: string
 ): AttendanceAuditListRow {
   const lastEvent = deriveLastEvent(events)
 
@@ -92,19 +93,22 @@ export function toAttendanceAuditListRow(
     lastEventType: lastEvent.lastEventType,
     lastEventAt: lastEvent.lastEventAt,
     eventCount: lastEvent.eventCount,
+    teacherName,
   }
 }
 
 export function toAttendanceAuditListRowList(
   entities: AttendanceEntity[],
   studentMap: Map<string, StudentEntity>,
-  eventsByAttendanceId: Map<string, AttendanceLifecycleEventEntity[]>
+  eventsByAttendanceId: Map<string, AttendanceLifecycleEventEntity[]>,
+  teacherNameMap: Map<string, string>
 ): AttendanceAuditListRow[] {
   return entities.map((entity) =>
     toAttendanceAuditListRow(
       entity,
       studentMap.get(entity.studentId),
-      eventsByAttendanceId.get(entity.id) ?? []
+      eventsByAttendanceId.get(entity.id) ?? [],
+      teacherNameMap.get(entity.teacherId)
     )
   )
 }

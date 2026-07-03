@@ -50,18 +50,34 @@ export function validateCreateStudentGroupInput(
     data: {
       name,
       studentIds: [...new Set(studentIds.map((id) => id.trim()))],
+      teacherId: normalizeOptionalTeacherId(input.teacherId),
     },
   }
+}
+
+function normalizeOptionalTeacherId(
+  value: unknown
+): string | null | undefined {
+  if (value === undefined) {
+    return undefined
+  }
+  if (value === null || value === "") {
+    return null
+  }
+  const trimmed = String(value).trim()
+  return trimmed || null
 }
 
 export function validateUpdateStudentGroupInput(input: {
   id: unknown
   name?: unknown
   studentIds?: unknown
+  teacherId?: unknown
 }): ValidationResult<{
   id: string
   name?: string
   studentIds?: string[]
+  teacherId?: string | null
 }> {
   const fieldErrors = mergeFieldErrors()
 
@@ -110,6 +126,11 @@ export function validateUpdateStudentGroupInput(input: {
     return { success: false, fieldErrors }
   }
 
+  const teacherId =
+    input.teacherId !== undefined
+      ? normalizeOptionalTeacherId(input.teacherId)
+      : undefined
+
   return {
     success: true,
     data: {
@@ -118,6 +139,7 @@ export function validateUpdateStudentGroupInput(input: {
       studentIds: studentIds
         ? [...new Set(studentIds.map((id) => id.trim()))]
         : undefined,
+      teacherId,
     },
   }
 }

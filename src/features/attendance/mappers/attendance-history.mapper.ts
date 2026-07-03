@@ -21,7 +21,8 @@ function formatAttendanceDate(date: Date): string {
 
 export function toAttendanceHistoryRow(
   entity: AttendanceEntity,
-  student: StudentEntity | undefined
+  student: StudentEntity | undefined,
+  teacherName?: string
 ): AttendanceHistoryRow {
   return {
     id: entity.id,
@@ -34,15 +35,21 @@ export function toAttendanceHistoryRow(
     voidedAt: entity.voidedAt ? entity.voidedAt.toISOString() : null,
     canVoid: entity.status === "VALID",
     canRestore: entity.status === "VOIDED",
+    teacherName,
   }
 }
 
 export function toAttendanceHistoryRowList(
   entities: AttendanceEntity[],
-  studentMap: Map<string, StudentEntity>
+  studentMap: Map<string, StudentEntity>,
+  teacherNameMap: Map<string, string>
 ): AttendanceHistoryRow[] {
   return entities.map((entity) =>
-    toAttendanceHistoryRow(entity, studentMap.get(entity.studentId))
+    toAttendanceHistoryRow(
+      entity,
+      studentMap.get(entity.studentId),
+      teacherNameMap.get(entity.teacherId)
+    )
   )
 }
 

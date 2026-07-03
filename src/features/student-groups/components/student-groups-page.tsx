@@ -15,9 +15,11 @@ import { StudentGroupFormDialog } from "@/features/student-groups/components/stu
 import {
   filterStudentGroups,
   formatGroupMemberPreview,
+  formatGroupTeacherLabel,
 } from "@/features/student-groups/lib/student-group-search"
 import type { StudentGroupSummary } from "@/features/student-groups/types/student-group-summary.type"
 import type { StudentSummary } from "@/features/students/types/student-summary.type"
+import type { TeacherSummary } from "@/features/teachers/types/teacher-summary.type"
 import { PageShell } from "@/shared/components/page-shell"
 import { Button } from "@/shared/components/ui/button"
 import { Input } from "@/shared/components/ui/input"
@@ -35,12 +37,14 @@ import { appToast } from "@/shared/lib/toast"
 type StudentGroupsPageProps = {
   initialGroups: StudentGroupSummary[]
   students: StudentSummary[]
+  teachers: TeacherSummary[]
   initialLoadError?: string
 }
 
 export function StudentGroupsPage({
   initialGroups,
   students,
+  teachers,
   initialLoadError,
 }: StudentGroupsPageProps) {
   const [groups, setGroups] = useState(initialGroups)
@@ -52,8 +56,8 @@ export function StudentGroupsPage({
   )
 
   const displayedGroups = useMemo(
-    () => filterStudentGroups(groups, students, searchQuery),
-    [groups, students, searchQuery]
+    () => filterStudentGroups(groups, students, teachers, searchQuery),
+    [groups, students, teachers, searchQuery]
   )
 
   const refreshGroups = useCallback(async () => {
@@ -114,7 +118,7 @@ export function StudentGroupsPage({
             id="student-group-search"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="分组名称，或成员姓名、联系人、电话…"
+            placeholder="分组名称、默认老师，或成员姓名、联系人、电话…"
           />
           {searchQuery.trim() && (
             <p className="text-sm text-muted-foreground">
@@ -138,6 +142,7 @@ export function StudentGroupsPage({
             <TableHeader>
               <TableRow>
                 <TableHead>名称</TableHead>
+                <TableHead>默认老师</TableHead>
                 <TableHead>成员</TableHead>
                 <TableHead>成员数</TableHead>
                 <TableHead>创建时间</TableHead>
@@ -148,6 +153,9 @@ export function StudentGroupsPage({
               {displayedGroups.map((group) => (
                 <TableRow key={group.id}>
                   <TableCell className="font-medium">{group.name}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatGroupTeacherLabel(group, teachers)}
+                  </TableCell>
                   <TableCell className="max-w-xs text-muted-foreground">
                     {formatGroupMemberPreview(group, students)}
                   </TableCell>
@@ -186,6 +194,7 @@ export function StudentGroupsPage({
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         students={students}
+        teachers={teachers}
         editingGroup={editingGroup}
         onSuccess={async () => {
           await refreshGroups()

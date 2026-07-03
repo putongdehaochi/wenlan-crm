@@ -5,6 +5,7 @@
  */
 
 import type { Attendance } from "@/generated/prisma/client"
+import type { Prisma } from "@/generated/prisma/client"
 import { toAttendanceDate } from "@/features/attendance/lib/attendance-date"
 import { appendLifecycleEvent } from "@/features/attendance/repositories/attendance-lifecycle.repository"
 import type {
@@ -61,10 +62,48 @@ function buildFindAuditWhere(input: FindAuditInput) {
   return Object.keys(where).length > 0 ? where : undefined
 }
 
+async function resolveTeacherIdForCreate(
+  tx: Prisma.TransactionClient,
+  teacherId?: string
+): Promise<string> {
+  if (teacherId) {
+    return teacherId
+  }
+
+  const defaultTeacher = await tx.teacher.findFirst({
+    where: { isDefault: true },
+    orderBy: { createdAt: "asc" },
+  })
+
+  if (defaultTeacher) {
+    return defaultTeacher.id
+  }
+
+  const fallback = await tx.teacher.findFirst({
+    orderBy: { createdAt: "asc" },
+  })
+
+  if (fallback) {
+    return fallback.id
+  }
+
+  const created = await tx.teacher.create({
+    data: {
+      id: "default-teacher",
+      name: "默认老师",
+      isDefault: true,
+    },
+  })
+
+  return created.id
+}
+
 function toAttendanceEntity(row: Attendance): AttendanceEntity {
   return {
     id: row.id,
     studentId: row.studentId,
+    groupId: row.groupId,
+    teacherId: row.teacherId,
     attendanceDate: row.attendanceDate,
     status: row.status,
     voidedAt: row.voidedAt,
@@ -76,12 +115,15 @@ export async function create(
   input: CreateAttendanceEntityInput
 ): Promise<AttendanceEntity> {
   return prisma.$transaction(async (tx) => {
+    const teacherId = await resolveTeacherIdForCreate(tx, input.teacherId)
+
     const row = await tx.attendance.create({
       data: {
         studentId: input.studentId,
         attendanceDate: toAttendanceDate(input.attendanceDate),
         status: input.status ?? "VALID",
         groupId: input.groupId ?? null,
+        teacherId,
       },
     })
 
@@ -90,6 +132,7 @@ export async function create(
         attendanceId: row.id,
         eventType: "CHECK_IN",
         occurredAt: row.createdAt,
+        operatorId: teacherId,
       },
       tx
     )
@@ -169,6 +212,10 @@ export async function getTodayDetailsMap(
       status: true,
       createdAt: true,
       voidedAt: true,
+      teacherId: true,
+      teacher: {
+        select: { name: true },
+      },
     },
   })
 
@@ -180,6 +227,8 @@ export async function getTodayDetailsMap(
         status: row.status,
         checkedInAt: row.createdAt,
         voidedAt: row.voidedAt,
+        teacherId: row.teacherId,
+        teacherName: row.teacher.name,
       },
     ])
   )
@@ -261,12 +310,19 @@ export async function voidRecord(id: string): Promise<AttendanceEntity> {
 }
 
 /** 对外契约名 `restore()` */
-export async function restoreRecord(id: string): Promise<AttendanceEntity> {
+export async function restoreRecord(
+  id: string,
+  options?: { teacherId?: string }
+): Promise<AttendanceEntity> {
   return prisma.$transaction(async (tx) => {
     const restoredAt = new Date()
     const row = await tx.attendance.update({
       where: { id },
-      data: { status: "VALID", voidedAt: null },
+      data: {
+        status: "VALID",
+        voidedAt: null,
+        ...(options?.teacherId ? { teacherId: options.teacherId } : {}),
+      },
     })
 
     await appendLifecycleEvent(
@@ -274,6 +330,7 @@ export async function restoreRecord(id: string): Promise<AttendanceEntity> {
         attendanceId: row.id,
         eventType: "RESTORE",
         occurredAt: restoredAt,
+        operatorId: options?.teacherId ?? row.teacherId,
       },
       tx
     )

@@ -8,13 +8,16 @@ import { listTodayAttendanceAction } from "@/features/attendance/actions/list-to
 import { AttendancePage } from "@/features/attendance/components/attendance-page"
 import { listSavedStudentGroupsAction } from "@/features/student-groups/actions/student-group.actions"
 import { listStudentsAction } from "@/features/students/actions/list-students.action"
+import { listTeachersAction } from "@/features/teachers/actions/teacher.actions"
 
 export default async function AttendanceRoutePage() {
-  const [result, groupsResult, studentsResult] = await Promise.all([
-    listTodayAttendanceAction(),
-    listSavedStudentGroupsAction(),
-    listStudentsAction(),
-  ])
+  const [result, groupsResult, studentsResult, teachersResult] =
+    await Promise.all([
+      listTodayAttendanceAction(),
+      listSavedStudentGroupsAction(),
+      listStudentsAction(),
+      listTeachersAction(),
+    ])
 
   return (
     <AttendancePage
@@ -24,6 +27,7 @@ export default async function AttendanceRoutePage() {
       }
       savedGroups={groupsResult.success ? groupsResult.data : []}
       students={studentsResult.success ? studentsResult.data : []}
+      teachers={teachersResult.success ? teachersResult.data : []}
     />
   )
 }

@@ -58,6 +58,7 @@ export function AttendanceTodayList({
           <TableHead>姓名</TableHead>
           <TableHead>课时余额</TableHead>
           <TableHead>今日状态</TableHead>
+          <TableHead>授课老师</TableHead>
           <TableHead>时间</TableHead>
           <TableHead>操作</TableHead>
         </TableRow>

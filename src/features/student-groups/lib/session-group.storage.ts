@@ -15,6 +15,7 @@ export function createDefaultSessionStudentGroup(): SessionStudentGroup {
     name: "本次签到",
     type: "SESSION",
     studentIds: [],
+    teacherId: null,
     createdAt: "",
   }
 }
@@ -25,6 +26,7 @@ function createNewSessionGroup(): SessionStudentGroup {
     name: "本次签到",
     type: "SESSION",
     studentIds: [],
+    teacherId: null,
     createdAt: new Date().toISOString(),
   }
 }
@@ -43,11 +45,12 @@ export function loadSessionStudentGroup(): SessionStudentGroup {
     }
 
     const parsed = JSON.parse(raw) as SessionStudentGroup
-    if (parsed.type !== "SESSION" || !Array.isArray(parsed.studentIds)) {
-      return createNewSessionGroup()
-    }
-
-    return parsed
+    return parsed.type !== "SESSION" || !Array.isArray(parsed.studentIds)
+      ? createNewSessionGroup()
+      : {
+          ...parsed,
+          teacherId: parsed.teacherId ?? null,
+        }
   } catch {
     return createNewSessionGroup()
   }
@@ -78,14 +81,27 @@ export function setSessionStudentIds(studentIds: string[]): SessionStudentGroup 
   return next
 }
 
+export function setSessionTeacherId(
+  teacherId: string | null
+): SessionStudentGroup {
+  const current = loadSessionStudentGroup()
+  const next: SessionStudentGroup = {
+    ...current,
+    teacherId,
+  }
+  saveSessionStudentGroup(next)
+  return next
+}
+
 export function cloneSavedGroupAsSession(
-  saved: { name: string; studentIds: string[] }
+  saved: { name: string; studentIds: string[]; teacherId?: string | null }
 ): SessionStudentGroup {
   const group: SessionStudentGroup = {
     id: `session-${Date.now()}`,
     name: saved.name,
     type: "SESSION",
     studentIds: [...saved.studentIds],
+    teacherId: saved.teacherId ?? null,
     createdAt: new Date().toISOString(),
   }
   saveSessionStudentGroup(group)

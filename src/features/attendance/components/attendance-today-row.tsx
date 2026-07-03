@@ -60,6 +60,9 @@ export function AttendanceTodayRow({
       <TableCell>{row.lessonBalance}</TableCell>
       <TableCell>{formatTodayStatus(row.todayStatus)}</TableCell>
       <TableCell className="text-sm text-muted-foreground">
+        {row.teacherName ?? "—"}
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
         {formatAttendanceTime(row)}
       </TableCell>
       <TableCell>
