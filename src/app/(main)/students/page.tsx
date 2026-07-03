@@ -7,6 +7,8 @@
 import { listStudentsAction } from "@/features/students/actions/list-students.action"
 import { StudentsPage } from "@/features/students/components/students-page"
 
+export const dynamic = "force-dynamic"
+
 export default async function StudentsRoutePage() {
   const result = await listStudentsAction()
 

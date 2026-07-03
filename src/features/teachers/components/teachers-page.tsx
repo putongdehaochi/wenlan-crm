@@ -5,7 +5,7 @@
 
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import {
   deleteTeacherAction,
@@ -61,6 +61,10 @@ export function TeachersPage({
       setLoadError(result.message ?? "加载失败")
     }
   }, [])
+
+  useEffect(() => {
+    void refreshTeachers()
+  }, [refreshTeachers])
 
   function openCreateDialog() {
     setEditingTeacher(null)

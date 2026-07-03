@@ -1,5 +1,6 @@
 /**
- * Vercel 生产构建：generate → migrate → seed → next build
+ * Vercel 生产构建：generate → migrate → next build
+ * 数据初始化请手动：SEED_DATABASE=1 npx tsx prisma/seed.ts
  */
 
 import "dotenv/config"
@@ -28,9 +29,6 @@ function main(): void {
 
   console.log("▶ 使用数据库连接执行 migrate deploy…")
   run("npx", ["prisma", "migrate", "deploy"])
-
-  console.log("▶ 初始化演示数据…")
-  run("npx", ["tsx", "prisma/seed.ts"])
 
   run("npx", ["next", "build"])
 }

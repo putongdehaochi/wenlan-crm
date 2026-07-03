@@ -1,7 +1,13 @@
 /**
- * 生产/预览环境数据初始化
- * - 若存在 prisma/data/export.json：导入本地导出的真实数据
- * - 再补充演示用 mock 数据（不与已有学员重名）
+ * 数据初始化（仅手动执行，生产构建不会自动跑）
+ *
+ * 用法：
+ *   npm run db:seed
+ *   SEED_DATABASE=1 npx tsx prisma/seed.ts
+ *
+ * - 若存在 prisma/data/export.json：导入本地导出
+ * - 否则补充演示 mock 学员
+ * - 数据库已有学员时跳过
  */
 
 import { readFile } from "node:fs/promises"

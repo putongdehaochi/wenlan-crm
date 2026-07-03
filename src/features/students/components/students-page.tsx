@@ -73,6 +73,10 @@ export function StudentsPage({
     }
   }, [])
 
+  useEffect(() => {
+    void refreshList()
+  }, [refreshList])
+
   const refreshDetail = useCallback(async (studentId: string) => {
     const result = await getStudentAction(studentId)
     if (result.success) {

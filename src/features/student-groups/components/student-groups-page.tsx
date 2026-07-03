@@ -5,7 +5,7 @@
 
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import {
   deleteSavedStudentGroupAction,
@@ -69,6 +69,10 @@ export function StudentGroupsPage({
       setLoadError(result.message ?? "加载失败")
     }
   }, [])
+
+  useEffect(() => {
+    void refreshGroups()
+  }, [refreshGroups])
 
   function openCreateDialog() {
     setEditingGroup(null)

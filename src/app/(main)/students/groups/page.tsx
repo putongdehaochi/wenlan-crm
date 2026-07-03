@@ -8,6 +8,8 @@ import { StudentGroupsPage } from "@/features/student-groups/components/student-
 import { listStudentsAction } from "@/features/students/actions/list-students.action"
 import { listTeachersAction } from "@/features/teachers/actions/teacher.actions"
 
+export const dynamic = "force-dynamic"
+
 export default async function StudentGroupsRoutePage() {
   const [groupsResult, studentsResult, teachersResult] = await Promise.all([
     listSavedStudentGroupsAction(),

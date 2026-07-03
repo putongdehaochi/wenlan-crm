@@ -6,6 +6,8 @@
 import { listTeachersAction } from "@/features/teachers/actions/teacher.actions"
 import { TeachersPage } from "@/features/teachers/components/teachers-page"
 
+export const dynamic = "force-dynamic"
+
 export default async function TeachersRoutePage() {
   const result = await listTeachersAction()
 
