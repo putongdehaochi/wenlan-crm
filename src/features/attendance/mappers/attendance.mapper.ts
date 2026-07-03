@@ -47,8 +47,7 @@ export function toTodayRow(
     canRestore,
     checkedInAt: detail?.checkedInAt.toISOString() ?? null,
     voidedAt: detail?.voidedAt?.toISOString() ?? null,
-    teacherName:
-      detail?.status === "VALID" ? (detail.teacherName ?? null) : null,
+    teacherName: detail?.teacherName ?? null,
     ...(voidedAttendanceId ? { attendanceId: voidedAttendanceId } : {}),
   }
 }

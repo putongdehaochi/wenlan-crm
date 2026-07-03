@@ -249,7 +249,10 @@ export function AttendancePage({
     setRestoringId(attendanceId)
     clearRowError(row.id)
 
-    const result = await restoreAttendanceAction({ attendanceId })
+    const result = await restoreAttendanceAction({
+      attendanceId,
+      teacherId: selectedTeacherId,
+    })
 
     if (result.success) {
       await refreshList()

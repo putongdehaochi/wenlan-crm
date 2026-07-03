@@ -35,6 +35,7 @@ export function toAttendanceHistoryRow(
     voidedAt: entity.voidedAt ? entity.voidedAt.toISOString() : null,
     canVoid: entity.status === "VALID",
     canRestore: entity.status === "VOIDED",
+    teacherId: entity.teacherId,
     teacherName,
   }
 }

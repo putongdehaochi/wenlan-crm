@@ -21,6 +21,8 @@ import {
   buildListAttendanceHistoryInput,
 } from "@/features/attendance/lib/attendance-history-query"
 import type { AttendanceHistoryRow } from "@/features/attendance/types/attendance-history-row.type"
+import { getDefaultTeacherId } from "@/features/teachers/components/teacher-select"
+import type { TeacherSummary } from "@/features/teachers/types/teacher-summary.type"
 import { PageShell } from "@/shared/components/page-shell"
 import { appToast } from "@/shared/lib/toast"
 
@@ -32,6 +34,7 @@ type AttendanceHistoryPageProps = {
   dateFromFilter?: string
   dateToFilter?: string
   filterStudentName?: string
+  teachers: TeacherSummary[]
 }
 
 export function AttendanceHistoryPage({
@@ -42,6 +45,7 @@ export function AttendanceHistoryPage({
   dateFromFilter,
   dateToFilter,
   filterStudentName,
+  teachers,
 }: AttendanceHistoryPageProps) {
   const [rows, setRows] = useState(initialRows)
   const [listError, setListError] = useState(initialLoadError ?? null)
@@ -59,6 +63,9 @@ export function AttendanceHistoryPage({
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false)
   const [restoring, setRestoring] = useState(false)
   const [restoreError, setRestoreError] = useState<string | null>(null)
+  const [restoreTeacherId, setRestoreTeacherId] = useState(() =>
+    getDefaultTeacherId(teachers)
+  )
 
   useEffect(() => {
     setRows(initialRows)
@@ -136,6 +143,7 @@ export function AttendanceHistoryPage({
 
   function handleRestoreClick(row: AttendanceHistoryRow) {
     setRestoreTarget(row)
+    setRestoreTeacherId(row.teacherId ?? getDefaultTeacherId(teachers))
     setRestoreError(null)
     setRestoreDialogOpen(true)
   }
@@ -157,6 +165,7 @@ export function AttendanceHistoryPage({
 
     const result = await restoreAttendanceAction({
       attendanceId: restoreTarget.id,
+      teacherId: restoreTeacherId,
     })
 
     if (result.success) {
@@ -228,6 +237,9 @@ export function AttendanceHistoryPage({
         open={restoreDialogOpen}
         onOpenChange={handleRestoreDialogOpenChange}
         row={restoreTarget}
+        teachers={teachers}
+        teacherId={restoreTeacherId}
+        onTeacherChange={setRestoreTeacherId}
         restoring={restoring}
         error={restoreError}
         onConfirm={handleRestoreConfirm}

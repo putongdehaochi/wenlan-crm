@@ -8,6 +8,7 @@ import { listAttendanceHistoryAction } from "@/features/attendance/actions/list-
 import { AttendanceHistoryPage } from "@/features/attendance/components/attendance-history-page"
 import { buildListAttendanceHistoryInput } from "@/features/attendance/lib/attendance-history-query"
 import { getStudentAction } from "@/features/students/actions/get-student.action"
+import { listTeachersAction } from "@/features/teachers/actions/teacher.actions"
 
 type AttendanceHistoryRoutePageProps = {
   searchParams: Promise<{
@@ -28,7 +29,10 @@ export default async function AttendanceHistoryRoutePage({
     dateTo,
   })
 
-  const result = await listAttendanceHistoryAction(listInput)
+  const [result, teachersResult] = await Promise.all([
+    listAttendanceHistoryAction(listInput),
+    listTeachersAction(),
+  ])
 
   let filterStudentName: string | undefined
   if (studentId && result.success) {
@@ -57,6 +61,7 @@ export default async function AttendanceHistoryRoutePage({
       dateFromFilter={dateFrom}
       dateToFilter={dateTo}
       filterStudentName={filterStudentName}
+      teachers={teachersResult.success ? teachersResult.data : []}
     />
   )
 }

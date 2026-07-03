@@ -412,7 +412,7 @@ export async function restoreAttendance(
   }
 
   try {
-    const { attendanceId } = validation.data
+    const { attendanceId, teacherId: manualTeacherId } = validation.data
 
     const existing = await attendanceRepository.findById(attendanceId)
     if (!existing) {
@@ -431,6 +431,17 @@ export async function restoreAttendance(
       }
     }
 
+    if (manualTeacherId) {
+      const teacher = await teacherRepository.findById(manualTeacherId)
+      if (!teacher) {
+        return {
+          success: false,
+          errorType: "TEACHER_NOT_FOUND",
+          message: ATTENDANCE_ERROR_MESSAGES.TEACHER_NOT_FOUND,
+        }
+      }
+    }
+
     const currentBalance = await lessonBalanceRepository.getBalance(
       existing.studentId
     )
@@ -442,7 +453,10 @@ export async function restoreAttendance(
       }
     }
 
-    const entity = await attendanceRepository.restore(attendanceId)
+    const entity = await attendanceRepository.restore(
+      attendanceId,
+      manualTeacherId ? { teacherId: manualTeacherId } : undefined
+    )
     const lessonBalance = await lessonBalanceRepository.getBalance(entity.studentId)
 
     return {

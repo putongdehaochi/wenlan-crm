@@ -5,6 +5,7 @@
 
 import type { StudentGroupSummary } from "@/features/student-groups/types/student-group-summary.type"
 import type { StudentSummary } from "@/features/students/types/student-summary.type"
+import type { TeacherSummary } from "@/features/teachers/types/teacher-summary.type"
 import { matchStudents } from "@/shared/components/student-search-select"
 
 const DEFAULT_PREVIEW_COUNT = 3

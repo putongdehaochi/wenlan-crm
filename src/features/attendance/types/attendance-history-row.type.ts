@@ -17,6 +17,7 @@ export type AttendanceHistoryRow = {
   voidedAt: string | null
   canVoid: boolean
   canRestore: boolean
+  teacherId?: string
   /** Reserved — Sprint 6 不展示 */
   note?: string
   /** Reserved — Sprint 6 不展示 */
