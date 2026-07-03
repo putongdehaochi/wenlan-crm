@@ -12,6 +12,9 @@ import { batchCheckInStudentsAction } from "@/features/attendance/actions/batch-
 import { checkInStudentAction } from "@/features/attendance/actions/check-in-student.action"
 import { listTodayAttendanceAction } from "@/features/attendance/actions/list-today-attendance.action"
 import { restoreAttendanceAction } from "@/features/attendance/actions/restore-attendance.action"
+import { listSavedStudentGroupsAction } from "@/features/student-groups/actions/student-group.actions"
+import { listStudentsAction } from "@/features/students/actions/list-students.action"
+import { listTeachersAction } from "@/features/teachers/actions/teacher.actions"
 import {
   AttendanceGroupToolbar,
   type GroupSelection,
@@ -54,6 +57,7 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog"
 import { appToast } from "@/shared/lib/toast"
+import { useRefetchOnRouteEnter } from "@/shared/hooks/use-refetch-on-route-enter"
 
 type AttendanceMode = "group" | "manual"
 
@@ -101,9 +105,11 @@ export function AttendancePage({
   initialRows,
   initialLoadError,
   savedGroups: initialSavedGroups,
-  students,
-  teachers,
+  students: initialStudents,
+  teachers: initialTeachers,
 }: AttendancePageProps) {
+  const [students, setStudents] = useState(initialStudents)
+  const [teachers, setTeachers] = useState(initialTeachers)
   const defaultTeacherId = useMemo(
     () => getDefaultTeacherId(teachers),
     [teachers]
@@ -167,6 +173,28 @@ export function AttendancePage({
     },
     [mode, selection]
   )
+
+  const refreshSharedData = useCallback(async () => {
+    const [studentsResult, teachersResult, groupsResult] = await Promise.all([
+      listStudentsAction(),
+      listTeachersAction(),
+      listSavedStudentGroupsAction(),
+    ])
+
+    if (studentsResult.success) {
+      setStudents(studentsResult.data)
+    }
+
+    if (teachersResult.success) {
+      setTeachers(teachersResult.data)
+    }
+
+    if (groupsResult.success) {
+      setSavedGroups(groupsResult.data)
+    }
+  }, [])
+
+  useRefetchOnRouteEnter("/attendance", refreshSharedData)
 
   useEffect(() => {
     const stored = loadSessionStudentGroup()

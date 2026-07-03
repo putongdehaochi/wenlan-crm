@@ -5,7 +5,7 @@
 
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 
 import {
   deleteTeacherAction,
@@ -28,6 +28,7 @@ import {
   TableRow,
 } from "@/shared/components/ui/table"
 import { appToast } from "@/shared/lib/toast"
+import { useRefetchOnRouteEnter } from "@/shared/hooks/use-refetch-on-route-enter"
 
 type TeachersPageProps = {
   initialTeachers: TeacherSummary[]
@@ -62,9 +63,7 @@ export function TeachersPage({
     }
   }, [])
 
-  useEffect(() => {
-    void refreshTeachers()
-  }, [refreshTeachers])
+  useRefetchOnRouteEnter("/students/teachers", refreshTeachers)
 
   function openCreateDialog() {
     setEditingTeacher(null)

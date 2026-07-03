@@ -10,6 +10,8 @@ import { buildListAttendanceHistoryInput } from "@/features/attendance/lib/atten
 import { getStudentAction } from "@/features/students/actions/get-student.action"
 import { listTeachersAction } from "@/features/teachers/actions/teacher.actions"
 
+export const dynamic = "force-dynamic"
+
 type AttendanceHistoryRoutePageProps = {
   searchParams: Promise<{
     studentId?: string

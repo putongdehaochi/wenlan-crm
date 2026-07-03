@@ -5,12 +5,14 @@
 
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 
 import {
   deleteSavedStudentGroupAction,
   listSavedStudentGroupsAction,
 } from "@/features/student-groups/actions/student-group.actions"
+import { listStudentsAction } from "@/features/students/actions/list-students.action"
+import { listTeachersAction } from "@/features/teachers/actions/teacher.actions"
 import { StudentGroupFormDialog } from "@/features/student-groups/components/student-group-form-dialog"
 import {
   filterStudentGroups,
@@ -33,6 +35,7 @@ import {
   TableRow,
 } from "@/shared/components/ui/table"
 import { appToast } from "@/shared/lib/toast"
+import { useRefetchOnRouteEnter } from "@/shared/hooks/use-refetch-on-route-enter"
 
 type StudentGroupsPageProps = {
   initialGroups: StudentGroupSummary[]
@@ -43,11 +46,13 @@ type StudentGroupsPageProps = {
 
 export function StudentGroupsPage({
   initialGroups,
-  students,
-  teachers,
+  students: initialStudents,
+  teachers: initialTeachers,
   initialLoadError,
 }: StudentGroupsPageProps) {
   const [groups, setGroups] = useState(initialGroups)
+  const [students, setStudents] = useState(initialStudents)
+  const [teachers, setTeachers] = useState(initialTeachers)
   const [loadError, setLoadError] = useState(initialLoadError ?? null)
   const [searchQuery, setSearchQuery] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -60,19 +65,30 @@ export function StudentGroupsPage({
     [groups, students, teachers, searchQuery]
   )
 
-  const refreshGroups = useCallback(async () => {
-    const result = await listSavedStudentGroupsAction()
-    if (result.success) {
-      setGroups(result.data)
+  const refreshPageData = useCallback(async () => {
+    const [groupsResult, studentsResult, teachersResult] = await Promise.all([
+      listSavedStudentGroupsAction(),
+      listStudentsAction(),
+      listTeachersAction(),
+    ])
+
+    if (groupsResult.success) {
+      setGroups(groupsResult.data)
       setLoadError(null)
     } else {
-      setLoadError(result.message ?? "加载失败")
+      setLoadError(groupsResult.message ?? "加载失败")
+    }
+
+    if (studentsResult.success) {
+      setStudents(studentsResult.data)
+    }
+
+    if (teachersResult.success) {
+      setTeachers(teachersResult.data)
     }
   }, [])
 
-  useEffect(() => {
-    void refreshGroups()
-  }, [refreshGroups])
+  useRefetchOnRouteEnter("/students/groups", refreshPageData)
 
   function openCreateDialog() {
     setEditingGroup(null)
@@ -92,7 +108,7 @@ export function StudentGroupsPage({
     const result = await deleteSavedStudentGroupAction(group.id)
     if (result.success) {
       appToast.success("分组已删除")
-      await refreshGroups()
+      await refreshPageData()
       return
     }
 
@@ -201,7 +217,7 @@ export function StudentGroupsPage({
         teachers={teachers}
         editingGroup={editingGroup}
         onSuccess={async () => {
-          await refreshGroups()
+          await refreshPageData()
         }}
       />
     </PageShell>

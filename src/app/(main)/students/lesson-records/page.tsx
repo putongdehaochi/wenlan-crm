@@ -9,6 +9,8 @@ import { parseLessonRecordTypeFilter } from "@/features/lessons/lib/lesson-recor
 import { getStudentAction } from "@/features/students/actions/get-student.action"
 import { listStudentsAction } from "@/features/students/actions/list-students.action"
 
+export const dynamic = "force-dynamic"
+
 type LessonRecordsRoutePageProps = {
   searchParams: Promise<{
     studentId?: string

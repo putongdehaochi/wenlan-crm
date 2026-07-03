@@ -5,10 +5,14 @@
 
 "use client"
 
+import { useCallback, useState } from "react"
+
 import { LessonRecordsFilter } from "@/features/lessons/components/lesson-records-filter"
 import { LessonRecordsList } from "@/features/lessons/components/lesson-records-list"
 import type { LessonRecordListRow } from "@/features/lessons/types/lesson-record-list-row.type"
+import { listStudentsAction } from "@/features/students/actions/list-students.action"
 import type { StudentSummary } from "@/features/students/types/student-summary.type"
+import { useRefetchOnRouteEnter } from "@/shared/hooks/use-refetch-on-route-enter"
 import { PageShell } from "@/shared/components/page-shell"
 
 type LessonRecordsPageProps = {
@@ -21,13 +25,24 @@ type LessonRecordsPageProps = {
 }
 
 export function LessonRecordsPage({
-  students,
+  students: initialStudents,
   rows,
   loadError,
   studentIdFilter,
   recordTypeFilter,
   filterStudentName,
 }: LessonRecordsPageProps) {
+  const [students, setStudents] = useState(initialStudents)
+
+  const refreshStudents = useCallback(async () => {
+    const result = await listStudentsAction()
+    if (result.success) {
+      setStudents(result.data)
+    }
+  }, [])
+
+  useRefetchOnRouteEnter("/students/lesson-records", refreshStudents)
+
   return (
     <PageShell
       title="课时记录"

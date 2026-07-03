@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from "react"
 import { listAttendanceHistoryAction } from "@/features/attendance/actions/list-attendance-history.action"
 import { restoreAttendanceAction } from "@/features/attendance/actions/restore-attendance.action"
 import { voidAttendanceAction } from "@/features/attendance/actions/void-attendance.action"
+import { listTeachersAction } from "@/features/teachers/actions/teacher.actions"
 import { AttendanceHistoryFilter } from "@/features/attendance/components/attendance-history-filter"
 import { AttendanceHistoryList } from "@/features/attendance/components/attendance-history-list"
 import { RestoreAttendanceDialog } from "@/features/attendance/components/restore-attendance-dialog"
@@ -25,6 +26,7 @@ import { getDefaultTeacherId } from "@/features/teachers/components/teacher-sele
 import type { TeacherSummary } from "@/features/teachers/types/teacher-summary.type"
 import { PageShell } from "@/shared/components/page-shell"
 import { appToast } from "@/shared/lib/toast"
+import { useRefetchOnRouteEnter } from "@/shared/hooks/use-refetch-on-route-enter"
 
 type AttendanceHistoryPageProps = {
   initialRows: AttendanceHistoryRow[]
@@ -45,8 +47,9 @@ export function AttendanceHistoryPage({
   dateFromFilter,
   dateToFilter,
   filterStudentName,
-  teachers,
+  teachers: initialTeachers,
 }: AttendanceHistoryPageProps) {
+  const [teachers, setTeachers] = useState(initialTeachers)
   const [rows, setRows] = useState(initialRows)
   const [listError, setListError] = useState(initialLoadError ?? null)
   const [filterFieldErrors, setFilterFieldErrors] = useState(
@@ -100,6 +103,16 @@ export function AttendanceHistoryPage({
       setFilterFieldErrors({})
     }
   }, [studentIdFilter, dateFromFilter, dateToFilter])
+
+  const refreshPageData = useCallback(async () => {
+    const [teachersResult] = await Promise.all([listTeachersAction()])
+    if (teachersResult.success) {
+      setTeachers(teachersResult.data)
+    }
+    await refreshList()
+  }, [refreshList])
+
+  useRefetchOnRouteEnter("/attendance/history", refreshPageData)
 
   function handleVoidClick(row: AttendanceHistoryRow) {
     setVoidTarget(row)

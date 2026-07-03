@@ -27,6 +27,7 @@ import type { StudentDetail } from "@/features/students/types/student-detail.typ
 import type { StudentSummary } from "@/features/students/types/student-summary.type"
 import { PageShell } from "@/shared/components/page-shell"
 import { Button } from "@/shared/components/ui/button"
+import { useRefetchOnRouteEnter } from "@/shared/hooks/use-refetch-on-route-enter"
 
 type StudentsPageProps = {
   initialSummaries: StudentSummary[]
@@ -73,9 +74,7 @@ export function StudentsPage({
     }
   }, [])
 
-  useEffect(() => {
-    void refreshList()
-  }, [refreshList])
+  useRefetchOnRouteEnter("/students", refreshList)
 
   const refreshDetail = useCallback(async (studentId: string) => {
     const result = await getStudentAction(studentId)
