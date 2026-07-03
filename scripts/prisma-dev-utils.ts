@@ -128,7 +128,7 @@ export async function startPrismaDevDetached(): Promise<string | null> {
 export async function restartPrismaDevPreserveData(): Promise<string> {
   console.log("▶ 重启 Prisma Dev（保留数据：stop → start）…")
 
-  await run("npx", ["prisma", "dev", "stop", PRISMA_DEV_NAME])
+  await run("npx", ["prisma", "dev", "stop", PRISMA_DEV_NAME, "--force"])
   await sleep(3_000)
 
   console.log("▶ 启动 Prisma Dev…")
@@ -216,7 +216,7 @@ export async function ensurePrismaDevReady(envUrl: string): Promise<string> {
 export function printRecoveryHelp(): void {
   console.log("")
   console.log("若仍无法连接，可手动尝试（保留数据）：")
-  console.log("  npx prisma dev stop default")
+  console.log("  npx prisma dev stop default --force")
   console.log("  npx prisma dev start default")
   console.log("")
   console.log("仅在确认可以清空本地测试数据时，才执行：")

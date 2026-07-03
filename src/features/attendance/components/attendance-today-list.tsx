@@ -23,6 +23,7 @@ type AttendanceTodayListProps = {
   rowErrors: Record<string, string>
   onCheckIn: (studentId: string) => void
   onRestore: (attendanceId: string) => void
+  emptyMessage?: string
 }
 
 export function AttendanceTodayList({
@@ -32,14 +33,19 @@ export function AttendanceTodayList({
   rowErrors,
   onCheckIn,
   onRestore,
+  emptyMessage,
 }: AttendanceTodayListProps) {
   if (rows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed py-16 text-center">
-        <p className="text-muted-foreground">暂无在读学员</p>
-        <p className="text-sm text-muted-foreground">
-          请先在「学生管理」中登记学员
+        <p className="text-muted-foreground">
+          {emptyMessage ?? "暂无在读学员"}
         </p>
+        {!emptyMessage && (
+          <p className="text-sm text-muted-foreground">
+            请先在「学生管理」中登记学员
+          </p>
+        )}
       </div>
     )
   }

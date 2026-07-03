@@ -30,8 +30,10 @@ import type { AttendanceHistoryRow } from "@/features/attendance/types/attendanc
 import type { AttendanceTodayRow } from "@/features/attendance/types/attendance-today-row.type"
 import type {
   CheckInInput,
+  BatchCheckInInput,
   ListTodayAttendanceInput,
 } from "@/features/attendance/types/check-in-input.type"
+import type { BatchCheckInResult } from "@/features/attendance/types/batch-check-in-result.type"
 import type { CheckInResult } from "@/features/attendance/types/check-in-result.type"
 import type { FindHistoryInput } from "@/features/attendance/types/find-history-input.type"
 import type { FindAuditInput } from "@/features/attendance/types/find-audit-input.type"
@@ -42,7 +44,7 @@ import type { VoidAttendanceInput } from "@/features/attendance/types/void-atten
 import type { VoidAttendanceResult } from "@/features/attendance/types/void-attendance-result.type"
 import {
   validateCheckInInput,
-  validateListTodayAttendanceDate,
+  validateListTodayAttendanceInput,
 } from "@/features/attendance/validators/check-in.validator"
 import { validateListAttendanceHistoryInput } from "@/features/attendance/validators/list-attendance-history.validator"
 import { validateListAttendanceAuditInput } from "@/features/attendance/validators/list-attendance-audit.validator"
@@ -50,24 +52,37 @@ import { validateGetAttendanceAuditTimelineInput } from "@/features/attendance/v
 import { validateRestoreAttendanceInput } from "@/features/attendance/validators/restore-attendance.validator"
 import { validateVoidAttendanceInput } from "@/features/attendance/validators/void-attendance.validator"
 import { lessonBalanceRepository } from "@/features/lessons/repositories/lesson-balance.repository"
+import { studentGroupRepository } from "@/features/student-groups/repositories/student-group.repository"
 import { studentRepository } from "@/features/students/repositories/student.repository"
+import type { StudentEntity } from "@/features/students/types/student-entity.type"
 import type { AttendanceActionResult } from "@/shared/types/action-result.type"
 
 export async function listTodayAttendance(
   input: ListTodayAttendanceInput = {}
 ): Promise<AttendanceActionResult<AttendanceTodayRow[]>> {
-  const dateValidation = validateListTodayAttendanceDate(input.attendanceDate)
-  if (!dateValidation.success) {
+  const validation = validateListTodayAttendanceInput(input)
+  if (!validation.success) {
     return {
       success: false,
       errorType: "VALIDATION_ERROR",
-      fieldErrors: dateValidation.fieldErrors,
+      fieldErrors: validation.fieldErrors,
     }
   }
 
   try {
-    const attendanceDate = dateValidation.data
-    const entities = await studentRepository.findAllActive()
+    const { attendanceDate, groupId, studentIds } = validation.data
+
+    let entities: StudentEntity[]
+    if (groupId) {
+      const memberIds =
+        await studentGroupRepository.findMemberStudentIds(groupId)
+      entities = await studentRepository.findActiveByIds(memberIds)
+    } else if (studentIds !== undefined && studentIds.length > 0) {
+      entities = await studentRepository.findActiveByIds(studentIds)
+    } else {
+      entities = await studentRepository.findAllActive()
+    }
+
     const ids = entities.map((entity) => entity.id)
 
     const detailsMap = await attendanceRepository.getTodayDetailsMap(
@@ -102,7 +117,7 @@ export async function checkInStudent(
   }
 
   try {
-    const { studentId, attendanceDate } = validation.data
+    const { studentId, attendanceDate, groupId } = validation.data
 
     const student = await studentRepository.findById(studentId)
     if (!student) {
@@ -157,6 +172,7 @@ export async function checkInStudent(
     const entity = await attendanceRepository.create({
       studentId,
       attendanceDate,
+      groupId,
     })
 
     const balanceAfter = await lessonBalanceRepository.getBalance(studentId)
@@ -171,6 +187,52 @@ export async function checkInStudent(
       errorType: "INTERNAL_ERROR",
       message: ATTENDANCE_ERROR_MESSAGES.INTERNAL_ERROR,
     }
+  }
+}
+
+export async function batchCheckInStudents(
+  input: BatchCheckInInput
+): Promise<AttendanceActionResult<BatchCheckInResult>> {
+  if (!Array.isArray(input.studentIds) || input.studentIds.length === 0) {
+    return {
+      success: false,
+      errorType: "VALIDATION_ERROR",
+      fieldErrors: {
+        studentIds: ATTENDANCE_ERROR_MESSAGES.STUDENT_ID_REQUIRED,
+      },
+    }
+  }
+
+  const uniqueIds = [...new Set(input.studentIds.map((id) => id.trim()))]
+  const succeeded: BatchCheckInResult["succeeded"] = []
+  const failed: BatchCheckInResult["failed"] = []
+
+  for (const studentId of uniqueIds) {
+    const result = await checkInStudent({
+      studentId,
+      attendanceDate: input.attendanceDate,
+      groupId: input.groupId,
+    })
+
+    if (result.success) {
+      succeeded.push(result.data)
+      continue
+    }
+
+    const student = await studentRepository.findById(studentId)
+    failed.push({
+      studentId,
+      studentName: student?.name,
+      message:
+        result.errorType === "VALIDATION_ERROR"
+          ? Object.values(result.fieldErrors ?? {}).join("；") || "签到失败"
+          : (result.message ?? "签到失败"),
+    })
+  }
+
+  return {
+    success: true,
+    data: { succeeded, failed },
   }
 }
 
@@ -435,6 +497,7 @@ export async function getAttendanceAuditTimeline(
 export const attendanceService = {
   listTodayAttendance,
   checkInStudent,
+  batchCheckInStudents,
   listAttendanceHistory,
   voidAttendance,
   restoreAttendance,

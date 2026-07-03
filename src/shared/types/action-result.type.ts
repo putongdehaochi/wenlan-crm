@@ -15,6 +15,7 @@ export type ActionErrorType =
   | "ATTENDANCE_NOT_FOUND"
   | "ALREADY_VOIDED"
   | "ALREADY_VALID"
+  | "GROUP_NOT_FOUND"
   | "INTERNAL_ERROR"
 
 export type ActionResult<T> =

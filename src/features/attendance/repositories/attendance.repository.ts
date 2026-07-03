@@ -81,6 +81,7 @@ export async function create(
         studentId: input.studentId,
         attendanceDate: toAttendanceDate(input.attendanceDate),
         status: input.status ?? "VALID",
+        groupId: input.groupId ?? null,
       },
     })
 

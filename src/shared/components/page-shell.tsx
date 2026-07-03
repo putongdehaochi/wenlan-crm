@@ -1,6 +1,7 @@
 type PageShellProps = {
   title: string
   description?: string
+  descriptionSuppressHydrationWarning?: boolean
   actions?: React.ReactNode
   children: React.ReactNode
 }
@@ -8,6 +9,7 @@ type PageShellProps = {
 export function PageShell({
   title,
   description,
+  descriptionSuppressHydrationWarning,
   actions,
   children,
 }: PageShellProps) {
@@ -19,7 +21,12 @@ export function PageShell({
             {title}
           </h1>
           {description && (
-            <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
+            <p
+              className="mt-1.5 text-sm text-muted-foreground"
+              suppressHydrationWarning={descriptionSuppressHydrationWarning}
+            >
+              {description}
+            </p>
           )}
         </div>
         {actions && (

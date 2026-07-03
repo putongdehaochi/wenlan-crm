@@ -26,6 +26,10 @@ enum LifecycleEventType {
   RESTORE
 }
 
+enum StudentGroupType {
+  SAVED
+}
+
 model Student {
   id          String        @id @default(cuid())
   name        String
@@ -39,9 +43,38 @@ model Student {
   lessonPackages           LessonPackage[]
   attendances              Attendance[]
   attendanceLifecycleEvents AttendanceLifecycleEvent[]
+  groupMemberships         StudentGroupMember[]
 
   @@unique([name, contactName])
   @@map("students")
+}
+
+model StudentGroup {
+  id        String           @id @default(cuid())
+  name      String
+  type      StudentGroupType @default(SAVED)
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+
+  members     StudentGroupMember[]
+  attendances Attendance[]
+
+  @@map("student_groups")
+}
+
+model StudentGroupMember {
+  id        String   @id @default(cuid())
+  groupId   String   @map("group_id")
+  studentId String   @map("student_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  group   StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  student Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, studentId])
+  @@index([groupId])
+  @@index([studentId])
+  @@map("student_group_members")
 }
 
 model LessonPackage {
@@ -61,16 +94,19 @@ model LessonPackage {
 model Attendance {
   id             String           @id @default(cuid())
   studentId      String           @map("student_id")
+  groupId        String?          @map("group_id")
   attendanceDate DateTime         @db.Date @map("attendance_date")
   status         AttendanceStatus @default(VALID)
   voidedAt       DateTime?        @map("voided_at")
   createdAt      DateTime         @default(now()) @map("created_at")
 
   student         Student                    @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  group           StudentGroup?              @relation(fields: [groupId], references: [id], onDelete: SetNull)
   lifecycleEvents AttendanceLifecycleEvent[]
 
   @@unique([studentId, attendanceDate])
   @@index([attendanceDate])
+  @@index([groupId])
   @@map("attendances")
 }
 

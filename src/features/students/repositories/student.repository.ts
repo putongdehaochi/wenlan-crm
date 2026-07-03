@@ -24,6 +24,21 @@ function toStudentEntity(row: Student): StudentEntity {
   }
 }
 
+export async function findActiveByIds(ids: string[]): Promise<StudentEntity[]> {
+  if (ids.length === 0) {
+    return []
+  }
+
+  const rows = await prisma.student.findMany({
+    where: { id: { in: ids }, status: "ACTIVE" },
+  })
+
+  const entityMap = new Map(rows.map((row) => [row.id, toStudentEntity(row)]))
+  return ids
+    .map((id) => entityMap.get(id))
+    .filter((entity): entity is StudentEntity => entity !== undefined)
+}
+
 export async function findAllActive(): Promise<StudentEntity[]> {
   const rows = await prisma.student.findMany({
     where: { status: "ACTIVE" },
@@ -84,6 +99,7 @@ export async function create(
 /** Repository 门面，便于 Service 注入与测试 */
 export const studentRepository = {
   findAllActive,
+  findActiveByIds,
   findById,
   findByIds,
   existsByNameAndContact,

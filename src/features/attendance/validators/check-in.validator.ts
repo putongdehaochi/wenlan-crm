@@ -6,7 +6,10 @@
 
 import { toAttendanceDate } from "@/features/attendance/lib/attendance-date"
 import { ATTENDANCE_ERROR_MESSAGES } from "@/features/attendance/errors/attendance.errors"
-import type { CheckInInput } from "@/features/attendance/types/check-in-input.type"
+import type {
+  CheckInInput,
+  ListTodayAttendanceInput,
+} from "@/features/attendance/types/check-in-input.type"
 import {
   mergeFieldErrors,
   type ValidationResult,
@@ -16,6 +19,13 @@ import { validateStudentId } from "@/features/students/validators/rules/student-
 export type ValidatedCheckInInput = {
   studentId: string
   attendanceDate: Date
+  groupId?: string
+}
+
+export type ValidatedListTodayAttendanceInput = {
+  attendanceDate: Date
+  groupId?: string
+  studentIds?: string[]
 }
 
 function parseAttendanceDate(value: unknown): Date | null {
@@ -56,11 +66,29 @@ export function validateCheckInInput(
     return { success: false, fieldErrors }
   }
 
+  let groupId: string | undefined
+  if (input.groupId !== undefined && input.groupId !== "") {
+    const groupIdError = validateStudentId(
+      input.groupId,
+      ATTENDANCE_ERROR_MESSAGES.STUDENT_ID_REQUIRED
+    )
+    if (groupIdError) {
+      fieldErrors.groupId = groupIdError
+    } else {
+      groupId = (input.groupId as string).trim()
+    }
+  }
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return { success: false, fieldErrors }
+  }
+
   return {
     success: true,
     data: {
       studentId: (input.studentId as string).trim(),
       attendanceDate: attendanceDate!,
+      groupId,
     },
   }
 }
@@ -78,6 +106,68 @@ export function validateListTodayAttendanceDate(
     }
   }
   return { success: true, data: parsed }
+}
+
+export function validateListTodayAttendanceInput(
+  input: ListTodayAttendanceInput = {}
+): ValidationResult<ValidatedListTodayAttendanceInput> {
+  const dateValidation = validateListTodayAttendanceDate(input.attendanceDate)
+  if (!dateValidation.success) {
+    return dateValidation
+  }
+
+  const fieldErrors = mergeFieldErrors()
+  let groupId: string | undefined
+  let studentIds: string[] | undefined
+
+  if (input.groupId !== undefined && input.groupId !== "") {
+    const groupIdError = validateStudentId(
+      input.groupId,
+      ATTENDANCE_ERROR_MESSAGES.STUDENT_ID_REQUIRED
+    )
+    if (groupIdError) {
+      fieldErrors.groupId = groupIdError
+    } else {
+      groupId = (input.groupId as string).trim()
+    }
+  }
+
+  if (input.studentIds !== undefined) {
+    if (!Array.isArray(input.studentIds)) {
+      fieldErrors.studentIds = ATTENDANCE_ERROR_MESSAGES.STUDENT_ID_REQUIRED
+    } else {
+      studentIds = []
+      for (const studentId of input.studentIds) {
+        const error = validateStudentId(
+          studentId,
+          ATTENDANCE_ERROR_MESSAGES.STUDENT_ID_REQUIRED
+        )
+        if (error) {
+          fieldErrors.studentIds = error
+          break
+        }
+        studentIds.push(String(studentId).trim())
+      }
+      studentIds = [...new Set(studentIds)]
+    }
+  }
+
+  if (groupId && studentIds && studentIds.length > 0) {
+    fieldErrors.groupId = "分组与临时学员列表不能同时使用"
+  }
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return { success: false, fieldErrors }
+  }
+
+  return {
+    success: true,
+    data: {
+      attendanceDate: dateValidation.data,
+      groupId,
+      studentIds,
+    },
+  }
 }
 
 function collectFieldError(

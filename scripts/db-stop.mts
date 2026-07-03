@@ -9,7 +9,13 @@ import { PRISMA_DEV_NAME, run } from "./prisma-dev-utils"
 
 async function main(): Promise<void> {
   console.log("▶ 停止 Prisma Dev（数据会保留）…")
-  const exitCode = await run("npx", ["prisma", "dev", "stop", PRISMA_DEV_NAME])
+  const exitCode = await run("npx", [
+    "prisma",
+    "dev",
+    "stop",
+    PRISMA_DEV_NAME,
+    "--force",
+  ])
 
   if (exitCode !== 0) {
     process.exit(exitCode)

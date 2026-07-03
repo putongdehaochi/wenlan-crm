@@ -21,4 +21,5 @@ export type CreateAttendanceEntityInput = {
   studentId: string
   attendanceDate: Date
   status?: AttendanceStatus
+  groupId?: string
 }
